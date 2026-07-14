@@ -1,0 +1,4155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Pratix Compressor — Free Online File Compression</title>
+  <meta name="description" content="Compress code, SVG, PDF and images entirely in your browser. No upload, no server, 100% private." />
+  <meta name="robots" content="index, follow" />
+
+  <meta property="og:title" content="Pratix Compressor" />
+  <meta property="og:description" content="Free client-side compression for Code, SVG, PDF & Images." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://pratix.io/compressor" />
+
+  <link rel="canonical" href="https://pratix.io/compressor" />
+
+  <!-- ── CDN Scripts ── -->
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --brand-primary:   #6366f1;
+  --brand-secondary: #8b5cf6;
+  --brand-accent:    #06b6d4;
+  --success:         #10b981;
+  --warning:         #f59e0b;
+  --danger:          #ef4444;
+
+  --bg-base:         #f8fafc;
+  --bg-surface:      #ffffff;
+  --bg-elevated:     #f1f5f9;
+
+  --border:          #e2e8f0;
+  --border-focus:    #6366f1;
+
+  --text-primary:    #0f172a;
+  --text-secondary:  #475569;
+  --text-muted:      #94a3b8;
+
+  --radius-sm:       6px;
+  --radius-md:       12px;
+  --radius-lg:       18px;
+  --radius-xl:       24px;
+
+  --shadow-sm:       0 1px 3px rgba(0,0,0,.08);
+  --shadow-md:       0 4px 16px rgba(0,0,0,.10);
+  --shadow-lg:       0 8px 32px rgba(0,0,0,.14);
+
+  --transition:      .2s ease;
+  --font:            'Inter', system-ui, -apple-system, sans-serif;
+}
+
+html.dark {
+  --bg-base:       #0b0f1a;
+  --bg-surface:    #111827;
+  --bg-elevated:   #1e2535;
+  --border:        #2d3748;
+  --text-primary:  #f1f5f9;
+  --text-secondary:#94a3b8;
+  --text-muted:    #4b5563;
+
+  --shadow-sm:     0 1px 3px rgba(0,0,0,.4);
+  --shadow-md:     0 4px 16px rgba(0,0,0,.5);
+  --shadow-lg:     0 8px 32px rgba(0,0,0,.6);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg-base);
+  color: var(--text-primary);
+  min-height: 100vh;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── HEADER ── */
+.pratix-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-sm);
+}
+
+.pratix-header-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 20px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.pratix-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.pratix-logo-mark {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pratix-logo-mark svg {
+  width: 18px;
+  height: 18px;
+  stroke: #fff;
+  fill: none;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.pratix-logo-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -.3px;
+}
+
+.pratix-logo-sub {
+  font-size: 10px;
+  color: var(--text-muted);
+  display: block;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.back-link {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+
+.back-link:hover {
+  color: var(--brand-primary);
+  border-color: var(--brand-primary);
+}
+
+.lang-select-wrapper select {
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 5px 8px;
+  cursor: pointer;
+}
+
+.theme-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.theme-toggle input { display: none; }
+
+.theme-toggle-track {
+  width: 46px;
+  height: 24px;
+  border-radius: 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 5px;
+  font-size: 11px;
+  transition: var(--transition);
+}
+
+.theme-toggle-thumb {
+  position: absolute;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--brand-primary);
+  transition: transform .25s ease;
+  pointer-events: none;
+}
+
+.theme-toggle input:checked ~ .theme-toggle-thumb {
+  transform: translateX(22px);
+}
+
+/* ── MAIN ── */
+.pratix-main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 20px 60px;
+}
+
+.ad-unit {
+  background: var(--bg-elevated);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 11px;
+  margin: 20px 0;
+}
+
+.ad-unit-leaderboard {
+  height: 90px;
+}
+
+.ad-unit-rectangle {
+  height: 280px;
+  max-width: 336px;
+  margin: 20px auto;
+}
+
+/* ── HERO ── */
+.page-hero {
+  text-align: center;
+  padding: 40px 0 32px;
+}
+
+.page-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg,rgba(99,102,241,.12),rgba(139,92,246,.12));
+  border: 1px solid rgba(99,102,241,.25);
+  border-radius: 99px;
+  padding: 5px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--brand-primary);
+  margin-bottom: 18px;
+}
+
+.page-hero h1 {
+  font-size: clamp(26px,5vw,42px);
+  font-weight: 800;
+  letter-spacing: -1px;
+  line-height: 1.15;
+  margin-bottom: 14px;
+}
+
+.page-hero h1 span {
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.page-hero p {
+  font-size: 15px;
+  color: var(--text-secondary);
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+/* ── GLOBAL DROPZONE ── */
+.global-dropzone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-xl);
+  padding: 36px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition);
+  background: var(--bg-surface);
+  margin-bottom: 28px;
+}
+
+.global-dropzone:hover,
+.global-dropzone.drag-over {
+  border-color: var(--brand-primary);
+  background: rgba(99,102,241,.04);
+}
+
+.dropzone-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg,rgba(99,102,241,.15),rgba(139,92,246,.15));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 14px;
+}
+
+.dropzone-icon svg {
+  width: 24px;
+  height: 24px;
+  stroke: var(--brand-primary);
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.dropzone-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.dropzone-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.dropzone-types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+
+.dropzone-type-badge {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-family: monospace;
+}
+
+/* ── TABS ── */
+.tab-nav {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-lg);
+  padding: 5px;
+  margin-bottom: 24px;
+}
+
+.tab-btn {
+  flex: 1;
+  min-width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.tab-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255,255,255,.5);
+}
+
+.tab-btn.active {
+  background: var(--bg-surface);
+  color: var(--brand-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.tab-icon {
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+
+.tab-panel {
+  display: none;
+}
+
+.tab-panel.active {
+  display: block;
+}
+
+/* ── WORKSPACE ── */
+.workspace-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.workspace-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elevated);
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.workspace-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.workspace-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.workspace-icon svg {
+  width: 20px;
+  height: 20px;
+  stroke: #fff;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.workspace-title h2 {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.workspace-title p {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.limit-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  background: rgba(99,102,241,.1);
+  color: var(--brand-primary);
+  border: 1px solid rgba(99,102,241,.2);
+  border-radius: 99px;
+  white-space: nowrap;
+}
+
+.workspace-body {
+  padding: 22px;
+}
+
+/* ── FORMS ── */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+
+.form-select,
+.form-input {
+  width: 100%;
+  padding: 9px 12px;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-family: var(--font);
+  transition: var(--transition);
+  outline: none;
+}
+
+.form-select:focus,
+.form-input:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+}
+
+.code-textarea {
+  width: 100%;
+  min-height: 160px;
+  padding: 12px;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-family: 'JetBrains Mono','Fira Code',monospace;
+  resize: vertical;
+  outline: none;
+  line-height: 1.6;
+  transition: var(--transition);
+}
+
+.code-textarea:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+}
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font);
+  border: none;
+  cursor: pointer;
+  transition: var(--transition);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.btn svg {
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+
+.btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(99,102,241,.35);
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(99,102,241,.45);
+}
+
+.btn-secondary {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--bg-elevated);
+  color: var(--danger);
+}
+
+.btn-sm {
+  padding: 7px 13px;
+  font-size: 12px;
+}
+
+/* ── MINI DROPZONE ── */
+.mini-dropzone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition);
+  background: var(--bg-elevated);
+  margin-bottom: 14px;
+}
+
+.mini-dropzone:hover,
+.mini-dropzone.drag-over {
+  border-color: var(--brand-primary);
+  background: rgba(99,102,241,.04);
+}
+
+.mini-dropzone-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.mini-dropzone-label svg {
+  width: 16px;
+  height: 16px;
+  stroke: var(--brand-primary);
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.mini-dropzone input[type="file"] {
+  display: none;
+}
+
+/* ── FILE BADGE ── */
+.file-loaded-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(16,185,129,.08);
+  border: 1px solid rgba(16,185,129,.25);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  margin-bottom: 14px;
+}
+
+.flb-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(16,185,129,.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.flb-icon svg {
+  width: 14px;
+  height: 14px;
+  stroke: var(--success);
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.flb-name {
+  font-size: 13px;
+  font-weight: 600;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.flb-size {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ── STATS ── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(90px,1fr));
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.stat-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  text-align: center;
+}
+
+.stat-card.success {
+  border-color: rgba(16,185,129,.3);
+  background: rgba(16,185,129,.06);
+}
+
+.stat-value {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.stat-card.success .stat-value {
+  color: var(--success);
+}
+
+.stat-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* ── PROGRESS ── */
+.progress-wrap {
+  height: 6px;
+  background: var(--bg-elevated);
+  border-radius: 99px;
+  overflow: hidden;
+  margin: 12px 0;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--brand-primary), var(--brand-accent));
+  border-radius: 99px;
+  transition: width .3s ease;
+}
+
+/* ── PRESETS ── */
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill,minmax(110px,1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.preset-btn {
+  padding: 10px 8px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border);
+  background: var(--bg-elevated);
+  cursor: pointer;
+  text-align: center;
+  transition: var(--transition);
+}
+
+.preset-btn:hover {
+  border-color: var(--brand-primary);
+}
+
+.preset-btn.selected {
+  border-color: var(--brand-primary);
+  background: rgba(99,102,241,.08);
+}
+
+.preset-name {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.preset-limit {
+  display: block;
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.manual-mode-box {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.manual-mode-box.visible {
+  display: flex;
+}
+
+.manual-mode-box .form-input {
+  max-width: 120px;
+}
+
+.unit-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* ── ALERTS ── */
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.alert svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.alert-info {
+  background: rgba(6,182,212,.08);
+  border: 1px solid rgba(6,182,212,.2);
+  color: var(--brand-accent);
+}
+
+.alert-warning {
+  background: rgba(245,158,11,.08);
+  border: 1px solid rgba(245,158,11,.2);
+  color: var(--warning);
+}
+/* ── PDF ── */
+.pdf-hybrid-box {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.pdf-hybrid-box-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: var(--text-secondary);
+}
+
+.pdf-hybrid-box ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.pdf-hybrid-box li {
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding-left: 18px;
+  position: relative;
+}
+
+.pdf-hybrid-box li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: var(--success);
+  font-weight: 700;
+}
+
+.pdf-hybrid-box li.cross::before {
+  content: '✗';
+  color: var(--danger);
+}
+
+.pdf-level-grid {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 480px) {
+  .pdf-level-grid {
+    grid-template-columns: repeat(2,1fr);
+  }
+}
+
+.pdf-level-btn {
+  padding: 10px 6px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border);
+  background: var(--bg-elevated);
+  cursor: pointer;
+  text-align: center;
+  transition: var(--transition);
+}
+
+.pdf-level-btn:hover {
+  border-color: var(--brand-primary);
+}
+
+.pdf-level-btn.selected {
+  border-color: var(--brand-primary);
+  background: rgba(99,102,241,.08);
+}
+
+.pdf-level-btn.selected .plb-name {
+  color: var(--brand-primary);
+}
+
+.plb-name {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.plb-desc {
+  display: block;
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 3px;
+  line-height: 1.4;
+}
+
+/* ── IMAGE GRID ── */
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill,minmax(140px,1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.image-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.image-card-thumb {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  display: block;
+}
+
+.image-card-info {
+  padding: 8px 10px;
+}
+
+.image-card-name {
+  font-size: 11px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.image-card-size {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.image-card-size .saved {
+  color: var(--success);
+  font-weight: 700;
+}
+
+/* ── TOAST ── */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  pointer-events: all;
+  animation: slideIn .25s ease;
+  max-width: 320px;
+}
+
+.toast svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.toast.success {
+  border-color: rgba(16,185,129,.3);
+  color: var(--success);
+}
+
+.toast.error {
+  border-color: rgba(239,68,68,.3);
+  color: var(--danger);
+}
+
+.toast.info {
+  border-color: rgba(99,102,241,.3);
+  color: var(--brand-primary);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ── FOOTER ── */
+.pratix-footer {
+  text-align: center;
+  padding: 28px 20px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.pratix-footer a {
+  color: var(--brand-primary);
+  text-decoration: none;
+}
+
+.pratix-footer a:hover {
+  text-decoration: underline;
+}
+
+/* ── DRAG OVERLAY ── */
+#drag-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background: rgba(10,10,30,.72);
+  backdrop-filter: blur(6px);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .22s ease;
+}
+
+#drag-overlay.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.drag-overlay-ring {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(135deg,rgba(99,102,241,.25),rgba(139,92,246,.25));
+  border: 3px dashed rgba(99,102,241,.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: overlayPulse 1.6s ease-in-out infinite;
+}
+
+.drag-overlay-ring svg {
+  width: 44px;
+  height: 44px;
+  stroke: #a5b4fc;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.drag-overlay-text {
+  font-size: clamp(18px,3vw,26px);
+  font-weight: 800;
+  letter-spacing: -.5px;
+  background: linear-gradient(135deg,#a5b4fc,#c4b5fd,#67e8f9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+  padding: 0 24px;
+}
+
+.drag-overlay-sub {
+  font-size: 13px;
+  color: rgba(165,180,252,.7);
+  font-weight: 500;
+}
+
+@keyframes overlayPulse {
+  0%,100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(99,102,241,.4);
+  }
+  50% {
+    transform: scale(1.06);
+    box-shadow: 0 0 0 18px rgba(99,102,241,0);
+  }
+}
+
+/* ── WORKER SPINNER ── */
+#worker-spinner {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: rgba(10,10,30,.55);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s ease;
+}
+
+#worker-spinner.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.worker-spinner-ring {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 4px solid rgba(99,102,241,.2);
+  border-top-color: var(--brand-primary);
+  animation: spin 0.75s linear infinite;
+}
+
+.worker-spinner-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #a5b4fc;
+}
+
+/* ── ADDED FEATURE: SUMMARY STRIP ── */
+.feature-strip {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 10px;
+  margin: 0 0 28px;
+}
+
+.feature-pill {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.feature-pill svg {
+  width: 18px;
+  height: 18px;
+  stroke: var(--brand-primary);
+  fill: none;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.feature-pill strong {
+  display: block;
+  font-size: 13px;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.feature-pill span {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+/* ── UTILS ── */
+.hidden {
+  display: none !important;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@media (max-width: 700px) {
+  .feature-strip {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .pratix-header-inner {
+    padding: 0 14px;
+  }
+
+  .pratix-main {
+    padding: 20px 14px 48px;
+  }
+
+  .workspace-body {
+    padding: 16px;
+  }
+
+  .tab-btn span {
+    display: none;
+  }
+
+  .tab-btn {
+    min-width: 44px;
+  }
+
+  .stats-row {
+    grid-template-columns: repeat(2,1fr);
+  }
+
+  .preset-grid {
+    grid-template-columns: repeat(3,1fr);
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- FULLSCREEN DRAG OVERLAY -->
+<div id="drag-overlay" role="presentation" aria-hidden="true">
+  <div class="drag-overlay-ring">
+    <svg viewBox="0 0 24 24">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="17 8 12 3 7 8"/>
+      <line x1="12" y1="3" x2="12" y2="15"/>
+    </svg>
+  </div>
+  <div class="drag-overlay-text" id="drag-overlay-text">Drop Your File Anywhere</div>
+  <div class="drag-overlay-sub" id="drag-overlay-sub">Release to auto-detect &amp; compress</div>
+</div>
+
+<!-- WEB WORKER SPINNER -->
+<div id="worker-spinner" role="status" aria-live="polite">
+  <div class="worker-spinner-ring"></div>
+  <div class="worker-spinner-text" id="worker-spinner-text">Processing…</div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     HEADER
+═══════════════════════════════════════════════════════════ -->
+<header class="pratix-header" role="banner">
+  <div class="pratix-header-inner">
+    <a href="https://pratix.io" class="pratix-logo" aria-label="Pratix Compressor">
+      <div class="pratix-logo-mark">
+        <svg viewBox="0 0 24 24">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+        </svg>
+      </div>
+      <div class="pratix-logo-text">
+        <span class="pratix-logo-title">Pratix Compressor</span>
+        <span class="pratix-logo-sub" data-i18n="logoSub">Free Online Tools</span>
+      </div>
+    </a>
+
+    <div class="header-controls">
+      <a href="https://pratix.io" class="back-link">
+        <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+          <polyline points="15 3 21 3 21 9"/>
+          <line x1="10" y1="14" x2="21" y2="3"/>
+        </svg>
+        <span data-i18n="backLink">pratix.io</span>
+      </a>
+
+      <div class="lang-select-wrapper">
+        <select id="lang-select" aria-label="Language" onchange="setLang(this.value)">
+          <option value="en">EN</option>
+          <option value="tr">TR</option>
+          <option value="es">ES</option>
+          <option value="de">DE</option>
+          <option value="fr">FR</option>
+          <option value="it">IT</option>
+          <option value="pt">PT</option>
+          <option value="ru">RU</option>
+          <option value="ja">JA</option>
+          <option value="zh">ZH</option>
+          <option value="ar">AR</option>
+          <option value="hi">HI</option>
+        </select>
+      </div>
+
+      <label class="theme-toggle" aria-label="Toggle dark mode">
+        <input type="checkbox" id="theme-toggle-input" onchange="toggleTheme()" />
+        <div class="theme-toggle-track">
+          <span>☀️</span>
+          <span>🌙</span>
+        </div>
+        <div class="theme-toggle-thumb"></div>
+      </label>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MAIN
+═══════════════════════════════════════════════════════════ -->
+<main class="pratix-main" id="main-content">
+
+  <div class="ad-unit ad-unit-leaderboard" aria-label="Advertisement">
+    <span>Advertisement · 728×90</span>
+  </div>
+
+  <!-- HERO -->
+  <section class="page-hero" aria-labelledby="hero-title">
+    <div class="page-hero-badge">
+      <svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round">
+        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+      </svg>
+      <span data-i18n="heroBadge">100% Client-Side · Zero Upload · Free Forever</span>
+    </div>
+
+    <h1 id="hero-title" data-i18n-html="heroTitle">Compress <span>Anything</span>, Instantly</h1>
+    <p data-i18n="heroSub">Code, SVG, PDF &amp; Images — compressed privately in your browser.</p>
+  </section>
+
+  <!-- ADDED FEATURE: TRUST / VALUE STRIP -->
+  <section class="feature-strip" aria-label="Privacy and speed highlights">
+    <div class="feature-pill">
+      <svg viewBox="0 0 24 24">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        <path d="M9 12l2 2 4-4"/>
+      </svg>
+      <div>
+        <strong data-i18n="featurePrivateTitle">Private by design</strong>
+        <span data-i18n="featurePrivateSub">Files stay in your browser.</span>
+      </div>
+    </div>
+
+    <div class="feature-pill">
+      <svg viewBox="0 0 24 24">
+        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+      </svg>
+      <div>
+        <strong data-i18n="featureFastTitle">Fast local processing</strong>
+        <span data-i18n="featureFastSub">No upload queue or server wait.</span>
+      </div>
+    </div>
+
+    <div class="feature-pill">
+      <svg viewBox="0 0 24 24">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      <div>
+        <strong data-i18n="featureBulkTitle">Bulk-friendly</strong>
+        <span data-i18n="featureBulkSub">Optimize multiple images into ZIP.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- GLOBAL DROPZONE -->
+  <div class="global-dropzone" id="global-dropzone" role="button" tabindex="0"
+    aria-label="Drop any file here"
+    ondragover="handleGlobalDragOver(event)"
+    ondragleave="handleGlobalDragLeave(event)"
+    ondrop="handleGlobalDrop(event)"
+    onclick="document.getElementById('global-file-input').click()"
+    onkeydown="if(event.key==='Enter'||event.key===' ')document.getElementById('global-file-input').click()">
+
+    <input type="file" id="global-file-input" style="display:none" onchange="handleGlobalFileInput(event)" />
+
+    <div class="dropzone-icon">
+      <svg viewBox="0 0 24 24">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/>
+        <line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+    </div>
+
+    <div class="dropzone-title" data-i18n="dropTitle">Drop any file here — we'll figure it out</div>
+    <div class="dropzone-sub" data-i18n="dropSub">Smart Auto-Detect routes your file to the right tool automatically</div>
+
+    <div class="dropzone-types">
+      <span class="dropzone-type-badge">.html</span>
+      <span class="dropzone-type-badge">.css</span>
+      <span class="dropzone-type-badge">.js</span>
+      <span class="dropzone-type-badge">.svg</span>
+      <span class="dropzone-type-badge">.pdf</span>
+      <span class="dropzone-type-badge">.png</span>
+      <span class="dropzone-type-badge">.jpg</span>
+      <span class="dropzone-type-badge">.webp</span>
+    </div>
+  </div>
+
+  <!-- TAB NAV -->
+  <nav class="tab-nav" role="tablist" aria-label="Compression tools">
+    <button class="tab-btn active" role="tab" aria-selected="true"
+      aria-controls="panel-code" id="tab-code" onclick="switchTab('code')">
+      <svg class="tab-icon" viewBox="0 0 24 24">
+        <polyline points="16 18 22 12 16 6"/>
+        <polyline points="8 6 2 12 8 18"/>
+      </svg>
+      <span data-i18n="tabCode">Code</span>
+    </button>
+
+    <button class="tab-btn" role="tab" aria-selected="false"
+      aria-controls="panel-svg" id="tab-svg" onclick="switchTab('svg')">
+      <svg class="tab-icon" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+        <line x1="9" y1="9" x2="9.01" y2="9"/>
+        <line x1="15" y1="9" x2="15.01" y2="9"/>
+      </svg>
+      <span data-i18n="tabSvg">SVG</span>
+    </button>
+
+    <button class="tab-btn" role="tab" aria-selected="false"
+      aria-controls="panel-pdf" id="tab-pdf" onclick="switchTab('pdf')">
+      <svg class="tab-icon" viewBox="0 0 24 24">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+      </svg>
+      <span data-i18n="tabPdf">PDF</span>
+    </button>
+
+    <button class="tab-btn" role="tab" aria-selected="false"
+      aria-controls="panel-image" id="tab-image" onclick="switchTab('image')">
+      <svg class="tab-icon" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="18" height="18" rx="2"/>
+        <circle cx="8.5" cy="8.5" r="1.5"/>
+        <polyline points="21 15 16 10 5 21"/>
+      </svg>
+      <span data-i18n="tabImage">Image &amp; ZIP</span>
+    </button>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       PANEL: CODE
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="tab-panel active" id="panel-code" role="tabpanel" aria-labelledby="tab-code">
+    <div class="workspace-card">
+      <div class="workspace-header">
+        <div class="workspace-title">
+          <div class="workspace-icon" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">
+            <svg viewBox="0 0 24 24">
+              <polyline points="16 18 22 12 16 6"/>
+              <polyline points="8 6 2 12 8 18"/>
+            </svg>
+          </div>
+
+          <div>
+            <h2 data-i18n="codeTitle">Code Minifier</h2>
+            <p data-i18n="codeSub">HTML, CSS &amp; JavaScript — regex-powered</p>
+          </div>
+        </div>
+
+        <span class="limit-badge">Max 10 MB</span>
+      </div>
+
+      <div class="workspace-body">
+        <div class="file-loaded-badge hidden" id="code-file-badge">
+          <div class="flb-icon">
+            <svg viewBox="0 0 24 24">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <span class="flb-name" id="code-file-name"></span>
+          <span class="flb-size" id="code-file-size"></span>
+        </div>
+
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px;">
+          <div style="flex:1;min-width:130px;">
+            <label class="form-label" data-i18n="outputFormatLabel">Output Format</label>
+            <select class="form-select" id="code-type">
+              <option value="auto">Auto Detect</option>
+              <option value="html">HTML</option>
+              <option value="css">CSS</option>
+              <option value="js">JavaScript</option>
+            </select>
+          </div>
+
+          <div style="flex:1;min-width:130px;">
+            <label class="form-label" data-i18n="qualityLabel">Level</label>
+            <select class="form-select" id="code-level">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+              <option value="max">Maximum</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" data-i18n="codeInputLabel">Input Code</label>
+
+          <div class="mini-dropzone" id="code-dropzone"
+            ondragover="event.preventDefault();this.classList.add('drag-over')"
+            ondragleave="this.classList.remove('drag-over')"
+            ondrop="handleCodeDrop(event)">
+
+            <label class="mini-dropzone-label" for="code-file-input">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <span data-i18n="dropOrPaste">Drop file or click — or paste code below</span>
+            </label>
+
+            <input type="file" id="code-file-input" accept=".html,.htm,.css,.js,.mjs,.ts" onchange="handleCodeFile(event)" />
+          </div>
+          <textarea class="code-textarea" id="code-input"
+            placeholder="Paste your HTML, CSS or JavaScript here..."
+            spellcheck="false"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"></textarea>
+        </div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+          <button class="btn btn-primary" onclick="minifyCode()">
+            <svg viewBox="0 0 24 24">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+            </svg>
+            <span data-i18n="minifyBtn">Minify</span>
+          </button>
+
+          <button class="btn btn-ghost btn-sm" onclick="clearCode()">
+            <svg viewBox="0 0 24 24">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            </svg>
+            <span data-i18n="clearBtn">Clear</span>
+          </button>
+        </div>
+
+        <div class="stats-row hidden" id="code-stats">
+          <div class="stat-card">
+            <div class="stat-value" id="code-stat-original">—</div>
+            <div class="stat-label" data-i18n="statOriginal">Original</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-value" id="code-stat-minified">—</div>
+            <div class="stat-label" data-i18n="statMinified">Minified</div>
+          </div>
+
+          <div class="stat-card success">
+            <div class="stat-value" id="code-stat-saved">—</div>
+            <div class="stat-label" data-i18n="statSaved">Saved</div>
+          </div>
+        </div>
+
+        <div class="form-group hidden" id="code-output-wrap">
+          <label class="form-label" data-i18n="codeOutputLabel">Minified Output</label>
+          <textarea class="code-textarea" id="code-output" readonly spellcheck="false"></textarea>
+
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+            <button class="btn btn-secondary btn-sm" onclick="copyCode()">
+              <svg viewBox="0 0 24 24">
+                <rect x="9" y="9" width="13" height="13" rx="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+              <span data-i18n="copyBtn">Copy</span>
+            </button>
+
+            <button class="btn btn-secondary btn-sm" onclick="downloadCode()">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              <span data-i18n="downloadBtn">Download</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       PANEL: SVG
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="panel-svg" role="tabpanel" aria-labelledby="tab-svg">
+    <div class="workspace-card">
+      <div class="workspace-header">
+        <div class="workspace-title">
+          <div class="workspace-icon" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+              <line x1="9" y1="9" x2="9.01" y2="9"/>
+              <line x1="15" y1="9" x2="15.01" y2="9"/>
+            </svg>
+          </div>
+
+          <div>
+            <h2 data-i18n="svgTitle">SVG Cleaner &amp; Optimizer</h2>
+            <p data-i18n="svgSub">Strips editor metadata &amp; whitespace</p>
+          </div>
+        </div>
+
+        <span class="limit-badge">Max 10 MB</span>
+      </div>
+
+      <div class="workspace-body">
+        <div class="file-loaded-badge hidden" id="svg-file-badge">
+          <div class="flb-icon">
+            <svg viewBox="0 0 24 24">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <span class="flb-name" id="svg-file-name"></span>
+          <span class="flb-size" id="svg-file-size"></span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" data-i18n="svgInputLabel">SVG Source</label>
+
+          <div class="mini-dropzone" id="svg-dropzone"
+            ondragover="event.preventDefault();this.classList.add('drag-over')"
+            ondragleave="this.classList.remove('drag-over')"
+            ondrop="handleSvgDrop(event)">
+
+            <label class="mini-dropzone-label" for="svg-file-input">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <span data-i18n="svgDropLabel">Drop .svg file or click</span>
+            </label>
+
+            <input type="file" id="svg-file-input" accept=".svg,image/svg+xml" onchange="handleSvgFile(event)" />
+          </div>
+
+          <textarea class="code-textarea" id="svg-input"
+            placeholder="Paste SVG code here..."
+            spellcheck="false"
+            autocomplete="off"></textarea>
+        </div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+          <button class="btn btn-primary" onclick="cleanSvg()">
+            <svg viewBox="0 0 24 24">
+              <path d="M3 6h18"/>
+              <path d="M8 6V4h8v2"/>
+              <path d="M19 6l-1 14H6L5 6"/>
+            </svg>
+            <span data-i18n="cleanBtn">Clean &amp; Optimize</span>
+          </button>
+
+          <button class="btn btn-ghost btn-sm" onclick="clearSvg()">
+            <svg viewBox="0 0 24 24">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            </svg>
+            <span data-i18n="clearBtn">Clear</span>
+          </button>
+        </div>
+
+        <div class="stats-row hidden" id="svg-stats">
+          <div class="stat-card">
+            <div class="stat-value" id="svg-stat-original">—</div>
+            <div class="stat-label" data-i18n="statOriginal">Original</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-value" id="svg-stat-cleaned">—</div>
+            <div class="stat-label" data-i18n="statCleaned">Cleaned</div>
+          </div>
+
+          <div class="stat-card success">
+            <div class="stat-value" id="svg-stat-saved">—</div>
+            <div class="stat-label" data-i18n="statSaved">Saved</div>
+          </div>
+        </div>
+
+        <div class="form-group hidden" id="svg-output-wrap">
+          <label class="form-label" data-i18n="svgOutputLabel">Cleaned SVG</label>
+          <textarea class="code-textarea" id="svg-output" readonly spellcheck="false"></textarea>
+
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+            <button class="btn btn-secondary btn-sm" onclick="copySvg()">
+              <svg viewBox="0 0 24 24">
+                <rect x="9" y="9" width="13" height="13" rx="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+              <span data-i18n="copyBtn">Copy</span>
+            </button>
+
+            <button class="btn btn-secondary btn-sm" onclick="downloadSvg()">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              <span data-i18n="downloadBtn">Download</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       PANEL: PDF
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="panel-pdf" role="tabpanel" aria-labelledby="tab-pdf">
+    <div class="workspace-card">
+      <div class="workspace-header">
+        <div class="workspace-title">
+          <div class="workspace-icon" style="background:linear-gradient(135deg,#ef4444,#f97316)">
+            <svg viewBox="0 0 24 24">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+          </div>
+
+          <div>
+            <h2 data-i18n="pdfTitle">PDF Compressor</h2>
+            <p data-i18n="pdfSub">Client-side PDF optimization via pdf-lib</p>
+          </div>
+        </div>
+
+        <span class="limit-badge">Max 80 MB</span>
+      </div>
+
+      <div class="workspace-body">
+        <div class="alert alert-info" style="margin-bottom:16px;">
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span data-i18n="pdfInfo">Your file is processed entirely in your browser. Zero data sent.</span>
+        </div>
+
+        <!-- ADDED FEATURE: PDF REALITY CHECK -->
+        <div class="alert alert-warning" style="margin-bottom:16px;">
+          <svg viewBox="0 0 24 24">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <span data-i18n="pdfRealityWarning">Text-heavy PDFs compress best. Scanned/image-heavy PDFs may not shrink much in-browser.</span>
+        </div>
+
+        <div class="pdf-hybrid-box">
+          <div class="pdf-hybrid-box-title">
+            <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:var(--brand-primary);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span data-i18n="pdfHybridTitle">What this tool does</span>
+          </div>
+
+          <ul>
+            <li data-i18n="pdfHybridDo1">Removes metadata</li>
+            <li data-i18n="pdfHybridDo2">Applies object stream compression</li>
+            <li data-i18n="pdfHybridDo3">Rebuilds PDF structure</li>
+            <li class="cross" data-i18n="pdfHybridNot1">Cannot re-compress embedded images</li>
+            <li class="cross" data-i18n="pdfHybridNot2">Results vary</li>
+          </ul>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" data-i18n="pdfLevelLabel">Compression Level</label>
+          <div class="pdf-level-grid">
+            <button class="pdf-level-btn" id="pdf-level-low" onclick="selectPdfLevel('low')">
+              <span class="plb-name" data-i18n="pdfLevelLow">Low</span>
+              <span class="plb-desc" data-i18n="pdfLevelLowDesc">Metadata only</span>
+            </button>
+
+            <button class="pdf-level-btn selected" id="pdf-level-medium" onclick="selectPdfLevel('medium')">
+              <span class="plb-name" data-i18n="pdfLevelMedium">Medium</span>
+              <span class="plb-desc" data-i18n="pdfLevelMediumDesc">Object streams + metadata</span>
+            </button>
+
+            <button class="pdf-level-btn" id="pdf-level-high" onclick="selectPdfLevel('high')">
+              <span class="plb-name" data-i18n="pdfLevelHigh">High</span>
+              <span class="plb-desc" data-i18n="pdfLevelHighDesc">Aggressive rebuild</span>
+            </button>
+
+            <button class="pdf-level-btn" id="pdf-level-max" onclick="selectPdfLevel('max')">
+              <span class="plb-name" data-i18n="pdfLevelMax">Maximum</span>
+              <span class="plb-desc" data-i18n="pdfLevelMaxDesc">All optimizations</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="file-loaded-badge hidden" id="pdf-file-badge">
+          <div class="flb-icon">
+            <svg viewBox="0 0 24 24">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <span class="flb-name" id="pdf-file-name"></span>
+          <span class="flb-size" id="pdf-file-size"></span>
+        </div>
+
+        <div class="mini-dropzone" id="pdf-dropzone"
+          ondragover="event.preventDefault();this.classList.add('drag-over')"
+          ondragleave="this.classList.remove('drag-over')"
+          ondrop="handlePdfDrop(event)">
+
+          <label class="mini-dropzone-label" for="pdf-file-input">
+            <svg viewBox="0 0 24 24">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <span data-i18n="pdfDropLabel">Drop .pdf file or click</span>
+          </label>
+
+          <input type="file" id="pdf-file-input" accept=".pdf,application/pdf" onchange="handlePdfFile(event)" />
+        </div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin:16px 0;">
+          <button class="btn btn-primary" id="pdf-compress-btn" onclick="compressPdf()" disabled>
+            <svg viewBox="0 0 24 24">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+            </svg>
+            <span data-i18n="compressBtn">Compress</span>
+          </button>
+
+          <button class="btn btn-ghost btn-sm" onclick="clearPdf()">
+            <svg viewBox="0 0 24 24">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            </svg>
+            <span data-i18n="clearBtn">Clear</span>
+          </button>
+        </div>
+
+        <div class="progress-wrap hidden" id="pdf-progress-wrap">
+          <div class="progress-bar" id="pdf-progress-bar" style="width:0%"></div>
+        </div>
+
+        <div class="stats-row hidden" id="pdf-stats">
+          <div class="stat-card">
+            <div class="stat-value" id="pdf-stat-original">—</div>
+            <div class="stat-label" data-i18n="statOriginal">Original</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-value" id="pdf-stat-compressed">—</div>
+            <div class="stat-label" data-i18n="statCompressed">Compressed</div>
+          </div>
+
+          <div class="stat-card success">
+            <div class="stat-value" id="pdf-stat-saved">—</div>
+            <div class="stat-label" data-i18n="statSaved">Saved</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-value" id="pdf-stat-pages">—</div>
+            <div class="stat-label" data-i18n="statPages">Pages</div>
+          </div>
+        </div>
+
+        <div class="hidden" id="pdf-download-wrap" style="margin-top:12px;">
+          <button class="btn btn-secondary btn-sm" onclick="downloadPdf()">
+            <svg viewBox="0 0 24 24">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span data-i18n="downloadBtn">Download</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       PANEL: IMAGE
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="panel-image" role="tabpanel" aria-labelledby="tab-image">
+    <div class="workspace-card">
+      <div class="workspace-header">
+        <div class="workspace-title">
+          <div class="workspace-icon" style="background:linear-gradient(135deg,#10b981,#06b6d4)">
+            <svg viewBox="0 0 24 24">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+          </div>
+
+          <div>
+            <h2 data-i18n="imageTitle">Image &amp; ZIP Optimizer</h2>
+            <p data-i18n="imageSub">Bulk compress PNG/JPG/WebP</p>
+          </div>
+        </div>
+
+        <span class="limit-badge">Max 40 MB</span>
+      </div>
+
+      <div class="workspace-body">
+        <div class="form-group">
+          <label class="form-label" data-i18n="targetLimitLabel">Platform Preset</label>
+
+          <div class="preset-grid" id="image-preset-grid">
+            <button class="preset-btn selected" onclick="selectImagePreset(this,0)">
+              <span class="preset-name">Original</span>
+              <span class="preset-limit">No limit</span>
+            </button>
+
+            <button class="preset-btn" onclick="selectImagePreset(this,8)">
+              <span class="preset-name">Discord</span>
+              <span class="preset-limit">8 MB</span>
+            </button>
+
+            <button class="preset-btn" onclick="selectImagePreset(this,5)">
+              <span class="preset-name">WhatsApp</span>
+              <span class="preset-limit">5 MB</span>
+            </button>
+
+            <button class="preset-btn" onclick="selectImagePreset(this,1)">
+              <span class="preset-name">Email</span>
+              <span class="preset-limit">1 MB</span>
+            </button>
+
+            <button class="preset-btn" onclick="selectImagePreset(this,10)">
+              <span class="preset-name">Telegram</span>
+              <span class="preset-limit">10 MB</span>
+            </button>
+
+            <button class="preset-btn" onclick="selectImagePreset(this,-1)">
+              <span class="preset-name" data-i18n="manualPresetName">Custom</span>
+              <span class="preset-limit" data-i18n="manualPresetSub">Manual</span>
+            </button>
+          </div>
+
+          <div class="manual-mode-box" id="image-manual-box">
+            <input type="number" class="form-input" id="image-manual-mb" placeholder="e.g. 2" min="0.1" max="150" step="0.1" />
+            <span class="unit-label">MB</span>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+          <div style="flex:1;min-width:130px;">
+            <label class="form-label" data-i18n="outputFormatLabel">Output Format</label>
+            <select class="form-select" id="image-format">
+              <option value="original">Keep Original</option>
+              <option value="jpeg">JPEG</option>
+              <option value="png">PNG</option>
+              <option value="webp">WebP</option>
+            </select>
+          </div>
+
+          <div style="flex:1;min-width:130px;">
+            <label class="form-label" data-i18n="qualityLabel">Quality</label>
+            <select class="form-select" id="image-quality">
+              <option value="0.95">Low compression</option>
+              <option value="0.82" selected>Medium</option>
+              <option value="0.65">High compression</option>
+              <option value="0.45">Maximum</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- ADDED FEATURE: IMAGE SIZE HINT -->
+        <div class="alert alert-info" style="margin-bottom:16px;">
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span data-i18n="imageHint">Tip: Choose WebP for the best size/quality balance on modern platforms.</span>
+        </div>
+
+        <div class="mini-dropzone" id="image-dropzone"
+          ondragover="event.preventDefault();this.classList.add('drag-over')"
+          ondragleave="this.classList.remove('drag-over')"
+          ondrop="handleImageDrop(event)">
+
+          <label class="mini-dropzone-label" for="image-file-input">
+            <svg viewBox="0 0 24 24">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <span data-i18n="imageDropLabel">Drop images or click (multiple supported)</span>
+          </label>
+
+          <input type="file" id="image-file-input" accept="image/png,image/jpeg,image/webp" multiple onchange="handleImageFiles(event)" />
+        </div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin:16px 0;">
+          <button class="btn btn-primary" id="image-compress-btn" onclick="compressImages()" disabled>
+            <svg viewBox="0 0 24 24">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+            </svg>
+            <span data-i18n="compressBtn">Compress</span>
+          </button>
+
+          <button class="btn btn-ghost btn-sm" onclick="clearImages()">
+            <svg viewBox="0 0 24 24">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            </svg>
+            <span data-i18n="clearBtn">Clear</span>
+          </button>
+        </div>
+
+        <div class="progress-wrap hidden" id="image-progress-wrap">
+          <div class="progress-bar" id="image-progress-bar" style="width:0%"></div>
+        </div>
+
+        <div class="stats-row hidden" id="image-stats">
+          <div class="stat-card">
+            <div class="stat-value" id="image-stat-files">—</div>
+            <div class="stat-label" data-i18n="statFiles">Files</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-value" id="image-stat-original">—</div>
+            <div class="stat-label" data-i18n="statOriginal">Original</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-value" id="image-stat-compressed">—</div>
+            <div class="stat-label" data-i18n="statCompressed">Compressed</div>
+          </div>
+
+          <div class="stat-card success">
+            <div class="stat-value" id="image-stat-saved">—</div>
+            <div class="stat-label" data-i18n="statSaved">Saved</div>
+          </div>
+        </div>
+
+        <div class="hidden" id="image-download-wrap" style="margin-top:12px;">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-secondary btn-sm" id="image-download-single" onclick="downloadSingleImage()">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              <span data-i18n="downloadBtn">Download</span>
+            </button>
+
+            <button class="btn btn-secondary btn-sm" id="image-download-zip" onclick="downloadImagesZip()">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              <span data-i18n="downloadZipBtn">Download ZIP</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="image-grid hidden" id="image-grid"></div>
+
+        <div class="ad-unit ad-unit-rectangle" aria-label="Advertisement">
+          <span>Advertisement · 336×280</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="pratix-footer" role="contentinfo">
+  <p>
+    <a href="https://pratix.io" target="_blank" rel="noopener">Pratix.io</a>
+    &nbsp;·&nbsp;
+    <span data-i18n="footerText">All processing happens locally. Zero data sent.</span>
+  </p>
+</footer>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   i18n DICTIONARY
+═══════════════════════════════════════════════════════════════ */
+const DICT = {
+  en:{
+    logoSub:'Free Online Tools',
+    backLink:'pratix.io',
+
+    heroBadge:'100% Client-Side · Zero Upload · Free Forever',
+    heroTitle:'Compress <span>Anything</span>, Instantly',
+    heroSub:'Code, SVG, PDF & Images — compressed privately in your browser.',
+
+    featurePrivateTitle:'Private by design',
+    featurePrivateSub:'Files stay in your browser.',
+    featureFastTitle:'Fast local processing',
+    featureFastSub:'No upload queue or server wait.',
+    featureBulkTitle:'Bulk-friendly',
+    featureBulkSub:'Optimize multiple images into ZIP.',
+
+    dropTitle:"Drop any file here — we'll figure it out",
+    dropSub:'Smart Auto-Detect routes your file to the right tool automatically',
+    dropOverlayText:'Drop Your File Anywhere',
+    dropOverlaySub:'Release to auto-detect & compress',
+    workerProcessing:'Processing… please wait',
+
+    tabCode:'Code',
+    tabSvg:'SVG',
+    tabPdf:'PDF',
+    tabImage:'Image & ZIP',
+
+    codeTitle:'Code Minifier',
+    codeSub:'HTML, CSS & JavaScript — regex-powered',
+
+    svgTitle:'SVG Cleaner & Optimizer',
+    svgSub:'Strips editor metadata & whitespace',
+
+    pdfTitle:'PDF Compressor',
+    pdfSub:'Client-side PDF optimization via pdf-lib',
+    pdfInfo:'Your file is processed entirely in your browser. Zero data sent.',
+    pdfRealityWarning:'Text-heavy PDFs compress best. Scanned/image-heavy PDFs may not shrink much in-browser.',
+    pdfHybridTitle:'What this tool does (client-side, no upload)',
+    pdfHybridDo1:'Removes metadata (author, title, keywords, producer)',
+    pdfHybridDo2:'Applies object stream compression (useObjectStreams)',
+    pdfHybridDo3:'Rebuilds PDF structure for smaller file size',
+    pdfHybridNot1:'Cannot re-compress embedded images (browser limitation)',
+    pdfHybridNot2:'Results vary — text-heavy PDFs compress best',
+    pdfLevelLabel:'Compression Level',
+    pdfLevelLow:'Low',
+    pdfLevelLowDesc:'Metadata only, max compatibility',
+    pdfLevelMedium:'Medium',
+    pdfLevelMediumDesc:'Object streams + metadata removal',
+    pdfLevelHigh:'High',
+    pdfLevelHighDesc:'Aggressive structure rebuild',
+    pdfLevelMax:'Maximum',
+    pdfLevelMaxDesc:'All optimizations + page cleanup',
+
+    imageTitle:'Image & ZIP Optimizer',
+    imageSub:'Bulk compress PNG/JPG/WebP',
+    imageHint:'Tip: Choose WebP for the best size/quality balance on modern platforms.',
+
+    dropOrPaste:'Drop file or click — or paste code below',
+    svgDropLabel:'Drop .svg file or click',
+    pdfDropLabel:'Drop .pdf file or click',
+    imageDropLabel:'Drop images or click (multiple supported)',
+
+    codeInputLabel:'Input Code',
+    codeOutputLabel:'Minified Output',
+    svgInputLabel:'SVG Source',
+    svgOutputLabel:'Cleaned SVG',
+
+    outputFormatLabel:'Output Format',
+    qualityLabel:'Quality',
+    targetLimitLabel:'Platform Preset',
+
+    manualPresetName:'Custom',
+    manualPresetSub:'Manual',
+
+    minifyBtn:'Minify',
+    cleanBtn:'Clean & Optimize',
+    compressBtn:'Compress',
+    clearBtn:'Clear',
+    copyBtn:'Copy',
+    downloadBtn:'Download',
+    downloadZipBtn:'Download ZIP',
+
+    statOriginal:'Original',
+    statMinified:'Minified',
+    statCleaned:'Cleaned',
+    statCompressed:'Compressed',
+    statSaved:'Saved',
+    statPages:'Pages',
+    statFiles:'Files',
+
+    footerText:'All processing happens locally. Zero data sent to any server.'
+  },
+  tr:{
+    logoSub:'Ücretsiz Online Araçlar',
+    backLink:'pratix.io',
+
+    heroBadge:'%100 İstemci Taraflı · Sıfır Yükleme · Sonsuza Kadar Ücretsiz',
+    heroTitle:'<span>Her Şeyi</span> Anında Sıkıştır',
+    heroSub:'Kod, SVG, PDF ve Görsel — tarayıcında gizlice sıkıştırılır.',
+
+    featurePrivateTitle:'Gizlilik odaklı',
+    featurePrivateSub:'Dosyalar tarayıcınızda kalır.',
+    featureFastTitle:'Hızlı yerel işlem',
+    featureFastSub:'Yükleme kuyruğu veya sunucu beklemesi yok.',
+    featureBulkTitle:'Toplu işlem dostu',
+    featureBulkSub:'Birden fazla görseli ZIP olarak optimize et.',
+
+    dropTitle:'Herhangi bir dosyayı buraya bırak — gerisini biz hallederiz',
+    dropSub:'Akıllı Otomatik Algılama dosyanı doğru araca yönlendirir',
+    dropOverlayText:'Dosyayı Herhangi Bir Yere Bırakın',
+    dropOverlaySub:'Otomatik algılama için bırakın',
+    workerProcessing:'İşleniyor… lütfen bekleyin',
+
+    tabCode:'Kod',
+    tabSvg:'SVG',
+    tabPdf:'PDF',
+    tabImage:'Görsel & ZIP',
+
+    codeTitle:'Kod Küçültücü',
+    codeSub:'HTML, CSS ve JavaScript — regex tabanlı',
+
+    svgTitle:'SVG Temizleyici',
+    svgSub:'Editör meta verilerini temizler',
+
+    pdfTitle:'PDF Sıkıştırıcı',
+    pdfSub:'pdf-lib ile istemci taraflı PDF optimizasyonu',
+    pdfInfo:'Dosyanız tamamen tarayıcınızda işlenir. Veri gönderilmez.',
+    pdfRealityWarning:'Metin ağırlıklı PDF’ler daha iyi sıkışır. Taranmış/görsel ağırlıklı PDF’ler tarayıcı içinde çok küçülmeyebilir.',
+    pdfHybridTitle:'Bu araç ne yapar',
+    pdfHybridDo1:'Meta verileri kaldırır',
+    pdfHybridDo2:'Nesne akışı sıkıştırması uygular',
+    pdfHybridDo3:'PDF yapısını yeniden oluşturur',
+    pdfHybridNot1:'Gömülü görselleri yeniden sıkıştıramaz',
+    pdfHybridNot2:'Sonuçlar dosyaya göre değişir',
+    pdfLevelLabel:'Sıkıştırma Seviyesi',
+    pdfLevelLow:'Düşük',
+    pdfLevelLowDesc:'Yalnızca meta veri',
+    pdfLevelMedium:'Orta',
+    pdfLevelMediumDesc:'Nesne akışları + meta veri',
+    pdfLevelHigh:'Yüksek',
+    pdfLevelHighDesc:'Agresif yapı yeniden oluşturma',
+    pdfLevelMax:'Maksimum',
+    pdfLevelMaxDesc:'Tüm optimizasyonlar',
+
+    imageTitle:'Görsel & ZIP Optimize Edici',
+    imageSub:'PNG/JPG/WebP toplu sıkıştırma',
+    imageHint:'İpucu: Modern platformlarda en iyi boyut/kalite dengesi için WebP seçin.',
+
+    dropOrPaste:'Dosyayı bırak veya tıkla — ya da kodu yapıştır',
+    svgDropLabel:'.svg dosyasını bırak veya tıkla',
+    pdfDropLabel:'.pdf dosyasını bırak veya tıkla',
+    imageDropLabel:'Görselleri bırak veya tıkla (çoklu)',
+
+    codeInputLabel:'Giriş Kodu',
+    codeOutputLabel:'Küçültülmüş Çıktı',
+    svgInputLabel:'SVG Kaynağı',
+    svgOutputLabel:'Temizlenmiş SVG',
+
+    outputFormatLabel:'Çıktı Formatı',
+    qualityLabel:'Kalite',
+    targetLimitLabel:'Platform Ön Ayarı',
+
+    manualPresetName:'Özel',
+    manualPresetSub:'Manuel',
+
+    minifyBtn:'Küçült',
+    cleanBtn:'Temizle & Optimize Et',
+    compressBtn:'Sıkıştır',
+    clearBtn:'Temizle',
+    copyBtn:'Kopyala',
+    downloadBtn:'İndir',
+    downloadZipBtn:'ZIP İndir',
+
+    statOriginal:'Orijinal',
+    statMinified:'Küçültülmüş',
+    statCleaned:'Temizlenmiş',
+    statCompressed:'Sıkıştırılmış',
+    statSaved:'Kazanılan',
+    statPages:'Sayfa',
+    statFiles:'Dosya',
+
+    footerText:'Tüm işlemler tarayıcınızda yerel olarak gerçekleşir.'
+  },
+
+  es:{
+    logoSub:'Herramientas Gratuitas',
+    backLink:'pratix.io',
+    heroBadge:'100% Cliente · Sin Subida · Gratis',
+    heroTitle:'Comprime <span>Cualquier Cosa</span>',
+    heroSub:'Código, SVG, PDF e Imágenes — en tu navegador.',
+    featurePrivateTitle:'Privado por diseño',
+    featurePrivateSub:'Los archivos permanecen en tu navegador.',
+    featureFastTitle:'Procesamiento local rápido',
+    featureFastSub:'Sin cola de subida ni espera del servidor.',
+    featureBulkTitle:'Ideal para lotes',
+    featureBulkSub:'Optimiza múltiples imágenes en ZIP.',
+    dropTitle:'Suelta cualquier archivo aquí',
+    dropSub:'Detección automática al instante',
+    dropOverlayText:'Suelta Tu Archivo',
+    dropOverlaySub:'Soltar para comprimir',
+    workerProcessing:'Procesando…',
+    tabCode:'Código',
+    tabSvg:'SVG',
+    tabPdf:'PDF',
+    tabImage:'Imagen & ZIP',
+    codeTitle:'Minificador',
+    codeSub:'HTML, CSS y JavaScript',
+    svgTitle:'Limpiador SVG',
+    svgSub:'Elimina metadatos',
+    pdfTitle:'Compresor PDF',
+    pdfSub:'Optimización cliente con pdf-lib',
+    pdfInfo:'Sin envío de datos.',
+    pdfRealityWarning:'Los PDF con mucho texto se comprimen mejor. Los PDF escaneados o con muchas imágenes pueden reducirse poco.',
+    pdfHybridTitle:'Qué hace esta herramienta',
+    pdfHybridDo1:'Elimina metadatos',
+    pdfHybridDo2:'Compresión de flujo de objetos',
+    pdfHybridDo3:'Reconstruye estructura PDF',
+    pdfHybridNot1:'No recomprime imágenes incrustadas',
+    pdfHybridNot2:'Resultados variables',
+    pdfLevelLabel:'Nivel',
+    pdfLevelLow:'Bajo',
+    pdfLevelLowDesc:'Solo metadatos',
+    pdfLevelMedium:'Medio',
+    pdfLevelMediumDesc:'Flujos + metadatos',
+    pdfLevelHigh:'Alto',
+    pdfLevelHighDesc:'Reconstrucción agresiva',
+    pdfLevelMax:'Máximo',
+    pdfLevelMaxDesc:'Todo',
+    imageTitle:'Imágenes & ZIP',
+    imageSub:'Compresión masiva',
+    imageHint:'Consejo: usa WebP para el mejor equilibrio tamaño/calidad.',
+    dropOrPaste:'Suelta o pega',
+    svgDropLabel:'Suelta .svg',
+    pdfDropLabel:'Suelta .pdf',
+    imageDropLabel:'Suelta imágenes',
+    codeInputLabel:'Entrada',
+    codeOutputLabel:'Salida',
+    svgInputLabel:'SVG',
+    svgOutputLabel:'SVG limpio',
+    outputFormatLabel:'Formato',
+    qualityLabel:'Calidad',
+    targetLimitLabel:'Preset',
+    manualPresetName:'Personalizado',
+    manualPresetSub:'Manual',
+    minifyBtn:'Minificar',
+    cleanBtn:'Limpiar',
+    compressBtn:'Comprimir',
+    clearBtn:'Limpiar',
+    copyBtn:'Copiar',
+    downloadBtn:'Descargar',
+    downloadZipBtn:'ZIP',
+    statOriginal:'Original',
+    statMinified:'Minificado',
+    statCleaned:'Limpio',
+    statCompressed:'Comprimido',
+    statSaved:'Ahorrado',
+    statPages:'Páginas',
+    statFiles:'Archivos',
+    footerText:'Todo local. Sin envío de datos.'
+  },
+
+  de:{
+    logoSub:'Kostenlose Tools',
+    backLink:'pratix.io',
+    heroBadge:'100% Client · Kein Upload · Kostenlos',
+    heroTitle:'<span>Alles</span> komprimieren',
+    heroSub:'Code, SVG, PDF und Bilder — im Browser.',
+    featurePrivateTitle:'Privat entwickelt',
+    featurePrivateSub:'Dateien bleiben im Browser.',
+    featureFastTitle:'Schnelle lokale Verarbeitung',
+    featureFastSub:'Keine Upload-Warteschlange.',
+    featureBulkTitle:'Batch-freundlich',
+    featureBulkSub:'Mehrere Bilder als ZIP optimieren.',
+    dropTitle:'Datei hier ablegen',
+    dropSub:'Automatische Erkennung',
+    dropOverlayText:'Datei ablegen',
+    dropOverlaySub:'Loslassen zum Komprimieren',
+    workerProcessing:'Verarbeitung…',
+    tabCode:'Code',
+    tabSvg:'SVG',
+    tabPdf:'PDF',
+    tabImage:'Bild & ZIP',
+    codeTitle:'Code-Minifier',
+    codeSub:'HTML, CSS & JavaScript',
+    svgTitle:'SVG-Bereiniger',
+    svgSub:'Metadaten entfernen',
+    pdfTitle:'PDF-Kompressor',
+    pdfSub:'Client-seitig mit pdf-lib',
+    pdfInfo:'Keine Daten gesendet.',
+    pdfRealityWarning:'Textlastige PDFs komprimieren am besten. Gescannte oder bildlastige PDFs werden evtl. kaum kleiner.',
+    pdfHybridTitle:'Was dieses Tool tut',
+    pdfHybridDo1:'Metadaten entfernen',
+    pdfHybridDo2:'Objektstream-Komprimierung',
+    pdfHybridDo3:'PDF-Struktur neu aufbauen',
+    pdfHybridNot1:'Keine erneute Bildkomprimierung',
+    pdfHybridNot2:'Ergebnisse variieren',
+    pdfLevelLabel:'Stufe',
+    pdfLevelLow:'Niedrig',
+    pdfLevelLowDesc:'Nur Metadaten',
+    pdfLevelMedium:'Mittel',
+    pdfLevelMediumDesc:'Streams + Metadaten',
+    pdfLevelHigh:'Hoch',
+    pdfLevelHighDesc:'Aggressiver Neuaufbau',
+    pdfLevelMax:'Maximum',
+    pdfLevelMaxDesc:'Alles',
+    imageTitle:'Bild & ZIP',
+    imageSub:'Massen-Komprimierung',
+    imageHint:'Tipp: WebP bietet oft das beste Verhältnis von Größe und Qualität.',
+    dropOrPaste:'Ablegen oder einfügen',
+    svgDropLabel:'.svg ablegen',
+    pdfDropLabel:'.pdf ablegen',
+    imageDropLabel:'Bilder ablegen',
+    codeInputLabel:'Eingabe',
+    codeOutputLabel:'Ausgabe',
+    svgInputLabel:'SVG',
+    svgOutputLabel:'Bereinigt',
+    outputFormatLabel:'Format',
+    qualityLabel:'Qualität',
+    targetLimitLabel:'Voreinstellung',
+    manualPresetName:'Benutzerdefiniert',
+    manualPresetSub:'Manuell',
+    minifyBtn:'Minifizieren',
+    cleanBtn:'Bereinigen',
+    compressBtn:'Komprimieren',
+    clearBtn:'Löschen',
+    copyBtn:'Kopieren',
+    downloadBtn:'Herunterladen',
+    downloadZipBtn:'ZIP',
+    statOriginal:'Original',
+    statMinified:'Minifiziert',
+    statCleaned:'Bereinigt',
+    statCompressed:'Komprimiert',
+    statSaved:'Gespart',
+    statPages:'Seiten',
+    statFiles:'Dateien',
+    footerText:'Alles lokal. Keine Daten gesendet.'
+  },
+
+  fr:{
+    logoSub:'Outils Gratuits',
+    backLink:'pratix.io',
+    heroBadge:'100% Client · Zéro Upload · Gratuit',
+    heroTitle:'Compressez <span>Tout</span>',
+    heroSub:'Code, SVG, PDF et Images — dans votre navigateur.',
+    featurePrivateTitle:'Confidentialité intégrée',
+    featurePrivateSub:'Les fichiers restent dans votre navigateur.',
+    featureFastTitle:'Traitement local rapide',
+    featureFastSub:'Pas de file d’attente serveur.',
+    featureBulkTitle:'Pensé pour le lot',
+    featureBulkSub:'Optimisez plusieurs images en ZIP.',
+    dropTitle:'Déposez un fichier ici',
+    dropSub:'Détection automatique',
+    dropOverlayText:'Déposez votre fichier',
+    dropOverlaySub:'Relâcher pour compresser',
+    workerProcessing:'Traitement…',
+    tabCode:'Code',
+    tabSvg:'SVG',
+    tabPdf:'PDF',
+    tabImage:'Image & ZIP',
+    codeTitle:'Minificateur',
+    codeSub:'HTML, CSS et JavaScript',
+    svgTitle:'Nettoyeur SVG',
+    svgSub:'Supprime les métadonnées',
+    pdfTitle:'Compresseur PDF',
+    pdfSub:'Optimisation client avec pdf-lib',
+    pdfInfo:'Aucune donnée envoyée.',
+    pdfRealityWarning:'Les PDF riches en texte se compressent mieux. Les PDF scannés ou très illustrés peuvent peu diminuer.',
+    pdfHybridTitle:'Ce que fait cet outil',
+    pdfHybridDo1:'Supprime les métadonnées',
+    pdfHybridDo2:"Compression de flux d'objets",
+    pdfHybridDo3:'Reconstruit la structure PDF',
+    pdfHybridNot1:'Ne recompresse pas les images intégrées',
+    pdfHybridNot2:'Résultats variables',
+    pdfLevelLabel:'Niveau',
+    pdfLevelLow:'Faible',
+    pdfLevelLowDesc:'Métadonnées seulement',
+    pdfLevelMedium:'Moyen',
+    pdfLevelMediumDesc:'Flux + métadonnées',
+    pdfLevelHigh:'Élevé',
+    pdfLevelHighDesc:'Reconstruction agressive',
+    pdfLevelMax:'Maximum',
+    pdfLevelMaxDesc:'Tout',
+    imageTitle:'Images & ZIP',
+    imageSub:'Compression en masse',
+    imageHint:'Astuce : WebP offre souvent le meilleur équilibre taille/qualité.',
+    dropOrPaste:'Déposer ou coller',
+    svgDropLabel:'Déposer .svg',
+    pdfDropLabel:'Déposer .pdf',
+    imageDropLabel:'Déposer images',
+    codeInputLabel:'Entrée',
+    codeOutputLabel:'Sortie',
+    svgInputLabel:'SVG',
+    svgOutputLabel:'SVG nettoyé',
+    outputFormatLabel:'Format',
+    qualityLabel:'Qualité',
+    targetLimitLabel:'Préréglage',
+    manualPresetName:'Personnalisé',
+    manualPresetSub:'Manuel',
+    minifyBtn:'Minifier',
+    cleanBtn:'Nettoyer',
+    compressBtn:'Compresser',
+    clearBtn:'Effacer',
+    copyBtn:'Copier',
+    downloadBtn:'Télécharger',
+    downloadZipBtn:'ZIP',
+    statOriginal:'Original',
+    statMinified:'Minifié',
+    statCleaned:'Nettoyé',
+    statCompressed:'Compressé',
+    statSaved:'Économisé',
+    statPages:'Pages',
+    statFiles:'Fichiers',
+    footerText:'Tout local. Aucune donnée envoyée.'
+  },
+
+  it:{
+    logoSub:'Strumenti Gratuiti',
+    backLink:'pratix.io',
+    heroBadge:'100% Client · Zero Upload · Gratuito',
+    heroTitle:'Comprimi <span>Qualsiasi Cosa</span>',
+    heroSub:'Codice, SVG, PDF e Immagini — nel browser.',
+    featurePrivateTitle:'Privato per design',
+    featurePrivateSub:'I file restano nel browser.',
+    featureFastTitle:'Elaborazione locale veloce',
+    featureFastSub:'Nessuna attesa server.',
+    featureBulkTitle:'Ideale per batch',
+    featureBulkSub:'Ottimizza più immagini in ZIP.',
+    dropTitle:'Trascina un file qui',
+    dropSub:'Rilevamento automatico',
+    dropOverlayText:'Trascina il file',
+    dropOverlaySub:'Rilascia per comprimere',
+    workerProcessing:'Elaborazione…',
+    tabCode:'Codice',
+    tabSvg:'SVG',
+    tabPdf:'PDF',
+    tabImage:'Immagine & ZIP',
+    codeTitle:'Minificatore',
+    codeSub:'HTML, CSS e JavaScript',
+    svgTitle:'Pulitore SVG',
+    svgSub:'Rimuove metadati',
+    pdfTitle:'Compressore PDF',
+    pdfSub:'Ottimizzazione client con pdf-lib',
+    pdfInfo:'Nessun dato inviato.',
+    pdfRealityWarning:'I PDF con molto testo si comprimono meglio. I PDF scansionati o pieni di immagini possono ridursi poco.',
+    pdfHybridTitle:'Cosa fa questo strumento',
+    pdfHybridDo1:'Rimuove i metadati',
+    pdfHybridDo2:'Compressione flusso oggetti',
+    pdfHybridDo3:'Ricostruisce struttura PDF',
+    pdfHybridNot1:'Non ricomprime immagini incorporate',
+    pdfHybridNot2:'Risultati variabili',
+    pdfLevelLabel:'Livello',
+    pdfLevelLow:'Basso',
+    pdfLevelLowDesc:'Solo metadati',
+    pdfLevelMedium:'Medio',
+    pdfLevelMediumDesc:'Flussi + metadati',
+    pdfLevelHigh:'Alto',
+    pdfLevelHighDesc:'Ricostruzione aggressiva',
+    pdfLevelMax:'Massimo',
+    pdfLevelMaxDesc:'Tutto',
+    imageTitle:'Immagini & ZIP',
+    imageSub:'Compressione massiva',
+    imageHint:'Suggerimento: WebP offre spesso il miglior equilibrio dimensione/qualità.',
+    dropOrPaste:'Trascina o incolla',
+    svgDropLabel:'Trascina .svg',
+    pdfDropLabel:'Trascina .pdf',
+    imageDropLabel:'Trascina immagini',
+    codeInputLabel:'Ingresso',
+    codeOutputLabel:'Uscita',
+    svgInputLabel:'SVG',
+    svgOutputLabel:'SVG pulito',
+    outputFormatLabel:'Formato',
+    qualityLabel:'Qualità',
+    targetLimitLabel:'Preset',
+    manualPresetName:'Personalizzato',
+    manualPresetSub:'Manuale',
+    minifyBtn:'Minifica',
+    cleanBtn:'Pulisci',
+    compressBtn:'Comprimi',
+    clearBtn:'Cancella',
+    copyBtn:'Copia',
+    downloadBtn:'Scarica',
+    downloadZipBtn:'ZIP',
+    statOriginal:'Originale',
+    statMinified:'Minificato',
+    statCleaned:'Pulito',
+    statCompressed:'Compresso',
+    statSaved:'Risparmiato',
+    statPages:'Pagine',
+    statFiles:'File',
+    footerText:'Tutto locale. Nessun dato inviato.'
+  },
+
+  pt:{
+    logoSub:'Ferramentas Gratuitas',
+    backLink:'pratix.io',
+    heroBadge:'100% Cliente · Zero Upload · Grátis',
+    heroTitle:'Comprima <span>Qualquer Coisa</span>',
+    heroSub:'Código, SVG, PDF e Imagens — no navegador.',
+    featurePrivateTitle:'Privado por design',
+    featurePrivateSub:'Os arquivos ficam no navegador.',
+    featureFastTitle:'Processamento local rápido',
+    featureFastSub:'Sem fila de upload ou espera do servidor.',
+    featureBulkTitle:'Amigável para lote',
+    featureBulkSub:'Otimize várias imagens em ZIP.',
+    dropTitle:'Solte um arquivo aqui',
+    dropSub:'Detecção automática',
+    dropOverlayText:'Solte o arquivo',
+    dropOverlaySub:'Soltar para comprimir',
+    workerProcessing:'Processando…',
+    tabCode:'Código',
+    tabSvg:'SVG',
+    tabPdf:'PDF',
+    tabImage:'Imagem & ZIP',
+    codeTitle:'Minificador',
+    codeSub:'HTML, CSS e JavaScript',
+    svgTitle:'Limpador SVG',
+    svgSub:'Remove metadados',
+    pdfTitle:'Compressor PDF',
+    pdfSub:'Otimização cliente com pdf-lib',
+    pdfInfo:'Nenhum dado enviado.',
+    pdfRealityWarning:'PDFs com muito texto comprimem melhor. PDFs escaneados ou com muitas imagens podem reduzir pouco.',
+    pdfHybridTitle:'O que esta ferramenta faz',
+    pdfHybridDo1:'Remove metadados',
+    pdfHybridDo2:'Compressão de fluxo de objetos',
+    pdfHybridDo3:'Reconstrói estrutura PDF',
+    pdfHybridNot1:'Não recomprime imagens incorporadas',
+    pdfHybridNot2:'Resultados variáveis',
+    pdfLevelLabel:'Nível',
+    pdfLevelLow:'Baixo',
+    pdfLevelLowDesc:'Só metadados',
+    pdfLevelMedium:'Médio',
+    pdfLevelMediumDesc:'Fluxos + metadados',
+    pdfLevelHigh:'Alto',
+    pdfLevelHighDesc:'Reconstrução agressiva',
+    pdfLevelMax:'Máximo',
+    pdfLevelMaxDesc:'Tudo',
+    imageTitle:'Imagens & ZIP',
+    imageSub:'Compressão em massa',
+    imageHint:'Dica: escolha WebP para o melhor equilíbrio tamanho/qualidade.',
+    dropOrPaste:'Soltar ou colar',
+    svgDropLabel:'Soltar .svg',
+    pdfDropLabel:'Soltar .pdf',
+    imageDropLabel:'Soltar imagens',
+    codeInputLabel:'Entrada',
+    codeOutputLabel:'Saída',
+    svgInputLabel:'SVG',
+    svgOutputLabel:'SVG limpo',
+    outputFormatLabel:'Formato',
+    qualityLabel:'Qualidade',
+    targetLimitLabel:'Preset',
+    manualPresetName:'Personalizado',
+    manualPresetSub:'Manual',
+    minifyBtn:'Minificar',
+    cleanBtn:'Limpar',
+    compressBtn:'Comprimir',
+    clearBtn:'Limpar',
+    copyBtn:'Copiar',
+    downloadBtn:'Baixar',
+    downloadZipBtn:'ZIP',
+    statOriginal:'Original',
+    statMinified:'Minificado',
+    statCleaned:'Limpo',
+    statCompressed:'Comprimido',
+    statSaved:'Economizado',
+    statPages:'Páginas',
+    statFiles:'Arquivos',
+    footerText:'Tudo local. Nenhum dado enviado.'
+  },
+
+  ru:{
+    logoSub:'Бесплатные инструменты',
+    backLink:'pratix.io',
+    heroBadge:'100% клиент · Без загрузки · Бесплатно',
+    heroTitle:'Сжимайте <span>всё</span>',
+    heroSub:'Код, SVG, PDF и изображения — в браузере.',
+    featurePrivateTitle:'Приватность по умолчанию',
+    featurePrivateSub:'Файлы остаются в браузере.',
+    featureFastTitle:'Быстрая локальная обработка',
+    featureFastSub:'Без очереди загрузки.',
+    featureBulkTitle:'Для пакетной работы',
+    featureBulkSub:'Несколько изображений в ZIP.',
+    dropTitle:'Перетащите файл сюда',
+    dropSub:'Автоопределение',
+    dropOverlayText:'Перетащите файл',
+    dropOverlaySub:'Отпустите для сжатия',
+    workerProcessing:'Обработка…',
+    tabCode:'Код',
+    tabSvg:'SVG',
+    tabPdf:'PDF',
+    tabImage:'Изображения & ZIP',
+    codeTitle:'Минификатор',
+    codeSub:'HTML, CSS и JavaScript',
+    svgTitle:'Очиститель SVG',
+    svgSub:'Удаляет метаданные',
+    pdfTitle:'Компрессор PDF',
+    pdfSub:'Оптимизация с pdf-lib',
+    pdfInfo:'Данные не отправляются.',
+    pdfRealityWarning:'PDF с большим количеством текста сжимаются лучше. Сканированные PDF могут почти не уменьшиться.',
+    pdfHybridTitle:'Что делает инструмент',
+    pdfHybridDo1:'Удаляет метаданные',
+    pdfHybridDo2:'Сжатие потока объектов',
+    pdfHybridDo3:'Перестраивает структуру PDF',
+    pdfHybridNot1:'Не сжимает встроенные изображения',
+    pdfHybridNot2:'Результаты варьируются',
+    pdfLevelLabel:'Уровень',
+    pdfLevelLow:'Низкий',
+    pdfLevelLowDesc:'Только метаданные',
+    pdfLevelMedium:'Средний',
+    pdfLevelMediumDesc:'Потоки + метаданные',
+    pdfLevelHigh:'Высокий',
+    pdfLevelHighDesc:'Агрессивный пересбор',
+    pdfLevelMax:'Максимум',
+    pdfLevelMaxDesc:'Всё',
+    imageTitle:'Изображения & ZIP',
+    imageSub:'Пакетное сжатие',
+    imageHint:'Совет: WebP часто дает лучший баланс размера и качества.',
+    dropOrPaste:'Перетащить или вставить',
+    svgDropLabel:'Перетащить .svg',
+    pdfDropLabel:'Перетащить .pdf',
+    imageDropLabel:'Перетащить изображения',
+    codeInputLabel:'Вход',
+    codeOutputLabel:'Выход',
+    svgInputLabel:'SVG',
+    svgOutputLabel:'Очищенный SVG',
+    outputFormatLabel:'Формат',
+    qualityLabel:'Качество',
+    targetLimitLabel:'Пресет',
+    manualPresetName:'Пользовательский',
+    manualPresetSub:'Ручной',
+    minifyBtn:'Минифицировать',
+    cleanBtn:'Очистить',
+    compressBtn:'Сжать',
+    clearBtn:'Очистить',
+    copyBtn:'Копировать',
+    downloadBtn:'Скачать',
+    downloadZipBtn:'ZIP',
+    statOriginal:'Оригинал',
+    statMinified:'Минифицировано',
+    statCleaned:'Очищено',
+    statCompressed:'Сжато',
+    statSaved:'Сохранено',
+    statPages:'Страниц',
+    statFiles:'Файлов',
+    footerText:'Всё локально. Данные не отправляются.'
+  },
+
+  ja:{
+    logoSub:'無料ツール',
+    backLink:'pratix.io',
+    heroBadge:'100%クライアント · アップロード不要 · 無料',
+    heroTitle:'<span>あらゆるファイル</span>を圧縮',
+    heroSub:'コード、SVG、PDF、画像 — ブラウザで圧縮。',
+    featurePrivateTitle:'プライバシー重視',
+    featurePrivateSub:'ファイルはブラウザ内に留まります。',
+    featureFastTitle:'高速ローカル処理',
+    featureFastSub:'アップロード待ちなし。',
+    featureBulkTitle:'一括処理対応',
+    featureBulkSub:'複数画像をZIPで最適化。',
+    dropTitle:'ファイルをここにドロップ',
+    dropSub:'自動検出',
+    dropOverlayText:'ファイルをドロップ',
+    dropOverlaySub:'離して圧縮',
+    workerProcessing:'処理中…',
+    tabCode:'コード',
+    tabSvg:'SVG',
+    tabPdf:'PDF',
+    tabImage:'画像 & ZIP',
+    codeTitle:'コード圧縮',
+    codeSub:'HTML、CSS、JavaScript',
+    svgTitle:'SVGクリーナー',
+    svgSub:'メタデータ削除',
+    pdfTitle:'PDF圧縮',
+    pdfSub:'pdf-libで最適化',
+    pdfInfo:'データ送信なし。',
+    pdfRealityWarning:'テキスト中心のPDFはよく圧縮されます。スキャン画像中心のPDFはあまり小さくならない場合があります。',
+    pdfHybridTitle:'機能',
+    pdfHybridDo1:'メタデータ削除',
+    pdfHybridDo2:'オブジェクトストリーム圧縮',
+    pdfHybridDo3:'PDF構造再構築',
+    pdfHybridNot1:'埋め込み画像の再圧縮不可',
+    pdfHybridNot2:'結果は異なる',
+    pdfLevelLabel:'圧縮レベル',
+    pdfLevelLow:'低',
+    pdfLevelLowDesc:'メタデータのみ',
+    pdfLevelMedium:'中',
+    pdfLevelMediumDesc:'ストリーム+メタデータ',
+    pdfLevelHigh:'高',
+    pdfLevelHighDesc:'積極的な再構築',
+    pdfLevelMax:'最大',
+    pdfLevelMaxDesc:'全最適化',
+    imageTitle:'画像 & ZIP',
+    imageSub:'一括圧縮',
+    imageHint:'ヒント: WebPはサイズと品質のバランスに優れています。',
+    dropOrPaste:'ドロップまたは貼り付け',
+    svgDropLabel:'.svgをドロップ',
+    pdfDropLabel:'.pdfをドロップ',
+    imageDropLabel:'画像をドロップ',
+    codeInputLabel:'入力',
+    codeOutputLabel:'出力',
+    svgInputLabel:'SVG',
+    svgOutputLabel:'クリーンSVG',
+    outputFormatLabel:'形式',
+    qualityLabel:'品質',
+    targetLimitLabel:'プリセット',
+    manualPresetName:'カスタム',
+    manualPresetSub:'手動',
+    minifyBtn:'圧縮',
+    cleanBtn:'クリーン',
+    compressBtn:'圧縮',
+    clearBtn:'クリア',
+    copyBtn:'コピー',
+    downloadBtn:'ダウンロード',
+    downloadZipBtn:'ZIP',
+    statOriginal:'元',
+    statMinified:'圧縮済',
+    statCleaned:'クリーン',
+    statCompressed:'圧縮済',
+    statSaved:'節約',
+    statPages:'ページ',
+    statFiles:'ファイル',
+    footerText:'すべてローカル処理。データ送信なし。'
+  },
+
+  zh:{
+    logoSub:'免费工具',
+    backLink:'pratix.io',
+    heroBadge:'100%客户端 · 零上传 · 免费',
+    heroTitle:'即时压缩<span>任何文件</span>',
+    heroSub:'代码、SVG、PDF和图片 — 在浏览器中。',
+    featurePrivateTitle:'隐私优先',
+    featurePrivateSub:'文件保留在浏览器中。',
+    featureFastTitle:'快速本地处理',
+    featureFastSub:'无上传队列或服务器等待。',
+    featureBulkTitle:'支持批量',
+    featureBulkSub:'将多张图片优化为 ZIP。',
+    dropTitle:'将文件拖放到此处',
+    dropSub:'智能自动检测',
+    dropOverlayText:'拖放文件',
+    dropOverlaySub:'松开以压缩',
+    workerProcessing:'处理中…',
+    tabCode:'代码',
+    tabSvg:'SVG',
+    tabPdf:'PDF',
+    tabImage:'图片 & ZIP',
+    codeTitle:'代码压缩',
+    codeSub:'HTML、CSS 和 JavaScript',
+    svgTitle:'SVG清理器',
+    svgSub:'删除元数据',
+    pdfTitle:'PDF压缩器',
+    pdfSub:'使用pdf-lib优化',
+    pdfInfo:'零数据发送。',
+    pdfRealityWarning:'文本较多的 PDF 压缩效果最好。扫描件或图片较多的 PDF 可能不会明显变小。',
+    pdfHybridTitle:'功能说明',
+    pdfHybridDo1:'删除元数据',
+    pdfHybridDo2:'对象流压缩',
+    pdfHybridDo3:'重建PDF结构',
+    pdfHybridNot1:'无法重新压缩嵌入图片',
+    pdfHybridNot2:'结果因文件而异',
+    pdfLevelLabel:'压缩级别',
+    pdfLevelLow:'低',
+    pdfLevelLowDesc:'仅元数据',
+    pdfLevelMedium:'中',
+    pdfLevelMediumDesc:'流+元数据',
+    pdfLevelHigh:'高',
+    pdfLevelHighDesc:'激进重建',
+    pdfLevelMax:'最大',
+    pdfLevelMaxDesc:'全部',
+    imageTitle:'图片 & ZIP',
+    imageSub:'批量压缩',
+    imageHint:'提示：WebP 通常在大小和质量之间提供最佳平衡。',
+    dropOrPaste:'拖放或粘贴',
+    svgDropLabel:'拖放.svg',
+    pdfDropLabel:'拖放.pdf',
+    imageDropLabel:'拖放图片',
+    codeInputLabel:'输入',
+    codeOutputLabel:'输出',
+    svgInputLabel:'SVG',
+    svgOutputLabel:'清理后SVG',
+    outputFormatLabel:'格式',
+    qualityLabel:'质量',
+    targetLimitLabel:'预设',
+    manualPresetName:'自定义',
+    manualPresetSub:'手动',
+    minifyBtn:'压缩',
+    cleanBtn:'清理',
+    compressBtn:'压缩',
+    clearBtn:'清除',
+    copyBtn:'复制',
+    downloadBtn:'下载',
+    downloadZipBtn:'ZIP',
+    statOriginal:'原始',
+    statMinified:'已压缩',
+    statCleaned:'已清理',
+    statCompressed:'已压缩',
+    statSaved:'已节省',
+    statPages:'页数',
+    statFiles:'文件',
+    footerText:'所有处理本地进行。零数据发送。'
+  },
+
+  ar:{
+    logoSub:'أدوات مجانية',
+    backLink:'pratix.io',
+    heroBadge:'100% عميل · بدون رفع · مجاني',
+    heroTitle:'اضغط <span>أي شيء</span>',
+    heroSub:'الكود، SVG، PDF والصور — في متصفحك.',
+    featurePrivateTitle:'خصوصية افتراضية',
+    featurePrivateSub:'تبقى الملفات في المتصفح.',
+    featureFastTitle:'معالجة محلية سريعة',
+    featureFastSub:'لا انتظار للخادم أو الرفع.',
+    featureBulkTitle:'مناسب للدفعات',
+    featureBulkSub:'تحسين صور متعددة في ZIP.',
+    dropTitle:'أسقط ملفاً هنا',
+    dropSub:'كشف تلقائي',
+    dropOverlayText:'أسقط الملف',
+    dropOverlaySub:'أفلت للضغط',
+    workerProcessing:'معالجة…',
+    tabCode:'كود',
+    tabSvg:'SVG',
+    tabPdf:'PDF',
+    tabImage:'صورة & ZIP',
+    codeTitle:'مضغوط الكود',
+    codeSub:'HTML وCSS وJavaScript',
+    svgTitle:'منظف SVG',
+    svgSub:'يزيل البيانات الوصفية',
+    pdfTitle:'ضاغط PDF',
+    pdfSub:'تحسين مع pdf-lib',
+    pdfInfo:'لا يُرسل أي بيانات.',
+    pdfRealityWarning:'ملفات PDF النصية تنضغط أفضل. الملفات الممسوحة أو الغنية بالصور قد لا تصغر كثيراً.',
+    pdfHybridTitle:'ما تفعله هذه الأداة',
+    pdfHybridDo1:'يزيل البيانات الوصفية',
+    pdfHybridDo2:'ضغط تدفق الكائنات',
+    pdfHybridDo3:'يعيد بناء هيكل PDF',
+    pdfHybridNot1:'لا يعيد ضغط الصور المضمنة',
+    pdfHybridNot2:'النتائج متفاوتة',
+    pdfLevelLabel:'المستوى',
+    pdfLevelLow:'منخفض',
+    pdfLevelLowDesc:'بيانات وصفية فقط',
+    pdfLevelMedium:'متوسط',
+    pdfLevelMediumDesc:'تدفقات + بيانات',
+    pdfLevelHigh:'عالي',
+    pdfLevelHighDesc:'إعادة بناء مكثفة',
+    pdfLevelMax:'أقصى',
+    pdfLevelMaxDesc:'كل شيء',
+    imageTitle:'صور & ZIP',
+    imageSub:'ضغط مجمّع',
+    imageHint:'نصيحة: WebP يقدم غالباً أفضل توازن بين الحجم والجودة.',
+    dropOrPaste:'أسقط أو الصق',
+    svgDropLabel:'أسقط .svg',
+    pdfDropLabel:'أسقط .pdf',
+    imageDropLabel:'أسقط الصور',
+    codeInputLabel:'إدخال',
+    codeOutputLabel:'إخراج',
+    svgInputLabel:'SVG',
+    svgOutputLabel:'SVG نظيف',
+    outputFormatLabel:'التنسيق',
+    qualityLabel:'الجودة',
+    targetLimitLabel:'الإعداد المسبق',
+    manualPresetName:'مخصص',
+    manualPresetSub:'يدوي',
+    minifyBtn:'ضغط',
+    cleanBtn:'تنظيف',
+    compressBtn:'ضغط',
+    clearBtn:'مسح',
+    copyBtn:'نسخ',
+    downloadBtn:'تنزيل',
+    downloadZipBtn:'ZIP',
+    statOriginal:'الأصلي',
+    statMinified:'مضغوط',
+    statCleaned:'نظيف',
+    statCompressed:'مضغوط',
+    statSaved:'موفر',
+    statPages:'صفحات',
+    statFiles:'ملفات',
+    footerText:'كل المعالجة محلية. لا يُرسل أي بيانات.'
+  },
+
+  hi:{
+    logoSub:'मुफ़्त टूल्स',
+    backLink:'pratix.io',
+    heroBadge:'100% क्लाइंट · अपलोड नहीं · मुफ़्त',
+    heroTitle:'<span>कुछ भी</span> कंप्रेस करें',
+    heroSub:'कोड, SVG, PDF और इमेज — ब्राउज़र में।',
+    featurePrivateTitle:'प्राइवेसी आधारित',
+    featurePrivateSub:'फ़ाइलें ब्राउज़र में ही रहती हैं।',
+    featureFastTitle:'तेज़ लोकल प्रोसेसिंग',
+    featureFastSub:'कोई अपलोड कतार या सर्वर प्रतीक्षा नहीं।',
+    featureBulkTitle:'बल्क के लिए उपयोगी',
+    featureBulkSub:'कई इमेज ZIP में ऑप्टिमाइज़ करें।',
+    dropTitle:'फ़ाइल यहाँ छोड़ें',
+    dropSub:'स्वतः पहचान',
+    dropOverlayText:'फ़ाइल छोड़ें',
+    dropOverlaySub:'छोड़ें कंप्रेस के लिए',
+    workerProcessing:'प्रोसेसिंग…',
+    tabCode:'कोड',
+    tabSvg:'SVG',
+    tabPdf:'PDF',
+    tabImage:'इमेज & ZIP',
+    codeTitle:'कोड मिनिफायर',
+    codeSub:'HTML, CSS और JavaScript',
+    svgTitle:'SVG क्लीनर',
+    svgSub:'मेटाडेटा हटाता है',
+    pdfTitle:'PDF कंप्रेसर',
+    pdfSub:'pdf-lib से ऑप्टिमाइज़',
+    pdfInfo:'कोई डेटा नहीं भेजा।',
+    pdfRealityWarning:'टेक्स्ट-heavy PDF बेहतर कंप्रेस होते हैं। स्कैन या image-heavy PDF बहुत कम घट सकते हैं।',
+    pdfHybridTitle:'यह टूल क्या करता है',
+    pdfHybridDo1:'मेटाडेटा हटाता है',
+    pdfHybridDo2:'ऑब्जेक्ट स्ट्रीम कंप्रेशन',
+    pdfHybridDo3:'PDF संरचना पुनर्निर्माण',
+    pdfHybridNot1:'एम्बेडेड इमेज री-कंप्रेस नहीं करता',
+    pdfHybridNot2:'परिणाम भिन्न हो सकते हैं',
+    pdfLevelLabel:'स्तर',
+    pdfLevelLow:'कम',
+    pdfLevelLowDesc:'केवल मेटाडेटा',
+    pdfLevelMedium:'मध्यम',
+    pdfLevelMediumDesc:'स्ट्रीम + मेटाडेटा',
+    pdfLevelHigh:'उच्च',
+    pdfLevelHighDesc:'आक्रामक पुनर्निर्माण',
+    pdfLevelMax:'अधिकतम',
+    pdfLevelMaxDesc:'सब कुछ',
+    imageTitle:'इमेज & ZIP',
+    imageSub:'बल्क कंप्रेशन',
+    imageHint:'टिप: WebP आधुनिक प्लेटफॉर्म पर अच्छा size/quality balance देता है।',
+    dropOrPaste:'छोड़ें या पेस्ट करें',
+    svgDropLabel:'.svg छोड़ें',
+    pdfDropLabel:'.pdf छोड़ें',
+    imageDropLabel:'इमेज छोड़ें',
+    codeInputLabel:'इनपुट',
+    codeOutputLabel:'आउटपुट',
+    svgInputLabel:'SVG',
+    svgOutputLabel:'क्लीन SVG',
+    outputFormatLabel:'फ़ॉर्मेट',
+    qualityLabel:'गुणवत्ता',
+    targetLimitLabel:'प्रीसेट',
+    manualPresetName:'कस्टम',
+    manualPresetSub:'मैन्युअल',
+    minifyBtn:'मिनिफाई',
+    cleanBtn:'क्लीन',
+    compressBtn:'कंप्रेस',
+    clearBtn:'साफ़',
+    copyBtn:'कॉपी',
+    downloadBtn:'डाउनलोड',
+    downloadZipBtn:'ZIP',
+    statOriginal:'मूल',
+    statMinified:'मिनिफाइड',
+    statCleaned:'क्लीन',
+    statCompressed:'कंप्रेस्ड',
+    statSaved:'बचाया',
+    statPages:'पृष्ठ',
+    statFiles:'फ़ाइलें',
+    footerText:'सब कुछ ब्राउज़र में। कोई डेटा नहीं भेजा।'
+  }
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════════════════ */
+let currentLang      = 'en';
+
+let pdfFileData      = null;
+let pdfOutputBytes   = null;
+let pdfLevel         = 'medium';
+
+let imageFiles       = [];
+let imagePresetLimit = 0;
+
+let svgFileName      = 'output.min.svg';
+let codeFileName     = 'output.min.js';
+
+const FILE_LIMITS = {
+  code:  10,
+  svg:   10,
+  pdf:   80,
+  image: 40
+};
+/* ═══════════════════════════════════════════════════════════════
+   UTILS
+═══════════════════════════════════════════════════════════════ */
+function fmtSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1048576).toFixed(2) + ' MB';
+}
+
+function fmtPct(before, after) {
+  if (!before) return '0%';
+  return ((before - after) / before * 100).toFixed(1) + '%';
+}
+
+function checkLimit(file, type) {
+  if (file.size > FILE_LIMITS[type] * 1048576) {
+    showToast('File too large. Max ' + FILE_LIMITS[type] + ' MB.', 'error');
+    return false;
+  }
+  return true;
+}
+
+function showToast(msg, type = 'info', duration = 4000) {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+
+  t.className = 'toast ' + type;
+
+  const icons = {
+    success: '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>',
+    error:   '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+    info:    '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+  };
+
+  t.innerHTML = (icons[type] || icons.info) + '<span>' + msg + '</span>';
+  c.appendChild(t);
+
+  setTimeout(() => {
+    t.style.cssText += 'opacity:0;transform:translateX(20px);transition:all .3s';
+    setTimeout(() => t.remove(), 300);
+  }, duration);
+}
+
+function triggerDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = Object.assign(document.createElement('a'), {
+    href: url,
+    download: filename
+  });
+
+  a.click();
+
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
+function showEl(id) {
+  document.getElementById(id)?.classList.remove('hidden');
+}
+
+function hideEl(id) {
+  document.getElementById(id)?.classList.add('hidden');
+}
+
+function setProgress(barId, wrapId, pct) {
+  showEl(wrapId);
+  document.getElementById(barId).style.width = pct + '%';
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   THEME
+═══════════════════════════════════════════════════════════════ */
+function toggleTheme() {
+  const dark = document.getElementById('theme-toggle-input').checked;
+  document.documentElement.classList.toggle('dark', dark);
+  localStorage.setItem('pratix-theme', dark ? 'dark' : 'light');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   i18n
+═══════════════════════════════════════════════════════════════ */
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('pratix-lang', lang);
+
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+
+  updateUI();
+}
+
+function updateUI() {
+  const d = DICT[currentLang] || DICT.en;
+
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const v = d[el.getAttribute('data-i18n')];
+    if (v !== undefined) el.textContent = v;
+  });
+
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    const v = d[el.getAttribute('data-i18n-html')];
+    if (v !== undefined) el.innerHTML = v;
+  });
+
+  const ot = document.getElementById('drag-overlay-text');
+  const os = document.getElementById('drag-overlay-sub');
+  const ws = document.getElementById('worker-spinner-text');
+
+  if (ot) ot.textContent = d.dropOverlayText || 'Drop Your File Anywhere';
+  if (os) os.textContent = d.dropOverlaySub || 'Release to auto-detect & compress';
+  if (ws) ws.textContent = d.workerProcessing || 'Processing…';
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TABS
+═══════════════════════════════════════════════════════════════ */
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    const active = btn.getAttribute('onclick').includes("'" + tabId + "'");
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-selected', String(active));
+  });
+
+  document.querySelectorAll('.tab-panel').forEach(panel => {
+    panel.classList.toggle('active', panel.id === 'panel-' + tabId);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FULLSCREEN DRAG OVERLAY
+═══════════════════════════════════════════════════════════════ */
+let _overlayDragCounter = 0;
+
+document.addEventListener('dragenter', e => {
+  if (!e.dataTransfer || !e.dataTransfer.types.includes('Files')) return;
+
+  _overlayDragCounter++;
+  document.getElementById('drag-overlay').classList.add('visible');
+});
+
+document.addEventListener('dragleave', () => {
+  _overlayDragCounter--;
+
+  if (_overlayDragCounter <= 0) {
+    _overlayDragCounter = 0;
+    document.getElementById('drag-overlay').classList.remove('visible');
+  }
+});
+
+document.addEventListener('dragover', e => {
+  e.preventDefault();
+});
+
+document.addEventListener('drop', e => {
+  e.preventDefault();
+
+  _overlayDragCounter = 0;
+  document.getElementById('drag-overlay').classList.remove('visible');
+
+  const f = e.dataTransfer && e.dataTransfer.files[0];
+  if (f) autoRoute(f);
+});
+
+/* ═══════════════════════════════════════════════════════════════
+   WEB WORKER — Code / SVG
+═══════════════════════════════════════════════════════════════ */
+const _workerCode = `
+self.onmessage = function(e) {
+  const { task, input, level } = e.data;
+  try {
+    let result;
+    if      (task === 'html') result = minifyHtml(input, level);
+    else if (task === 'css')  result = minifyCss(input, level);
+    else if (task === 'js')   result = minifyJs(input, level);
+    else if (task === 'svg')  result = cleanSvgWorker(input);
+    self.postMessage({ ok: true, result });
+  } catch(err) {
+    self.postMessage({ ok: false, error: err.message });
+  }
+};
+
+function minifyHtml(s, level) {
+  s = s.replace(/<!--(?!\\[if)[\\s\\S]*?-->/g, '');
+  s = s.replace(/>\\s+</g, '><');
+
+  if (level === 'low') return s.trim();
+
+  s = s.replace(/\\s{2,}/g, ' ');
+
+  if (level === 'medium') return s.trim();
+
+  s = s.replace(/\\s*=\\s*"([^"<>\\s]+)"/g, '=$1');
+  s = s.replace(/\\s*=\\s*'([^'<>\\s]+)'/g, '=$1');
+
+  if (level === 'high') return s.trim();
+
+  s = s.replace(/<style[^>]*>([\\s\\S]*?)<\\/style>/gi, function(m,c){
+    return m.replace(c, minifyCss(c,'max'));
+  });
+
+  s = s.replace(/<script[^>]*>([\\s\\S]*?)<\\/script>/gi, function(m,c){
+    return (!m.includes('type') || m.includes('javascript')) ? m.replace(c, minifyJs(c,'max')) : m;
+  });
+
+  return s.trim();
+}
+
+function minifyCss(s, level) {
+  s = s.replace(/\\/\\*[\\s\\S]*?\\*\\//g, '');
+  s = s.replace(/\\s*([{}:;,>~+])\\s*/g, '$1');
+  s = s.replace(/;}/g, '}');
+
+  if (level === 'low') return s.trim();
+
+  s = s.replace(/\\s{2,}/g, ' ').replace(/\\n/g, '');
+
+  if (level === 'medium') return s.trim();
+
+  s = s.replace(/:0(px|em|rem|%)/g, ':0');
+  s = s.replace(/#([0-9a-fA-F])\\1([0-9a-fA-F])\\2([0-9a-fA-F])\\3/g, '#$1$2$3');
+
+  return s.trim();
+}
+
+function minifyJs(s, level) {
+  s = s.replace(/\\/\\/[^\\n]*/g, '').replace(/\\/\\*[\\s\\S]*?\\*\\//g, '');
+
+  if (level === 'low') return s.trim();
+
+  s = s
+    .replace(/\\s*([=+\\-*\\/<>!&|?:,;{}()\\[\\]])\\s*/g, '$1')
+    .replace(/\\s{2,}/g, ' ')
+    .replace(/\\n+/g, '\\n');
+
+  if (level === 'medium') return s.trim();
+
+  s = s.replace(/\\n/g, '');
+
+  return s.trim();
+}
+
+function cleanSvgWorker(s) {
+  s = s.replace(/<\\?xml[^?]*\\?>/gi, '');
+  s = s.replace(/<!DOCTYPE[^>]*>/gi, '');
+  s = s.replace(/<!--[\\s\\S]*?-->/g, '');
+
+  s = s.replace(/<sodipodi:[^/][^>]*\\/>/gi, '');
+  s = s.replace(/<sodipodi:[\\s\\S]*?<\\/sodipodi:[^>]*>/gi, '');
+  s = s.replace(/<inkscape:[^/][^>]*\\/>/gi, '');
+  s = s.replace(/<inkscape:[\\s\\S]*?<\\/inkscape:[^>]*>/gi, '');
+
+  s = s.replace(/<metadata[\\s\\S]*?<\\/metadata>/gi, '');
+  s = s.replace(/\\s(inkscape|sodipodi|dc|cc|rdf):[a-z-]+=["'][^"']*["']/gi, '');
+  s = s.replace(/\\s+xmlns:(inkscape|sodipodi|dc|cc|rdf)="[^"]*"/gi, '');
+
+  s = s.replace(/<g[^>]*>\\s*<\\/g>/gi, '');
+  s = s.replace(/>\\s+</g, '><').replace(/\\s{2,}/g, ' ').replace(/\\n+/g, '').trim();
+
+  return s;
+}
+`;
+
+let _workerURL = null;
+
+function getWorker() {
+  if (!_workerURL) {
+    _workerURL = URL.createObjectURL(
+      new Blob([_workerCode], { type: 'application/javascript' })
+    );
+  }
+
+  return new Worker(_workerURL);
+}
+
+function showWorkerSpinner() {
+  document.getElementById('worker-spinner').classList.add('visible');
+}
+
+function hideWorkerSpinner() {
+  document.getElementById('worker-spinner').classList.remove('visible');
+}
+
+function runInWorker(task, input, level) {
+  return new Promise((resolve, reject) => {
+    const w = getWorker();
+
+    w.onmessage = e => {
+      w.terminate();
+      e.data.ok ? resolve(e.data.result) : reject(new Error(e.data.error));
+    };
+
+    w.onerror = e => {
+      w.terminate();
+      reject(new Error(e.message));
+    };
+
+    w.postMessage({ task, input, level });
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GLOBAL DROPZONE
+═══════════════════════════════════════════════════════════════ */
+function handleGlobalDragOver(e) {
+  e.preventDefault();
+  document.getElementById('global-dropzone').classList.add('drag-over');
+}
+
+function handleGlobalDragLeave() {
+  document.getElementById('global-dropzone').classList.remove('drag-over');
+}
+
+function handleGlobalDrop(e) {
+  e.preventDefault();
+  handleGlobalDragLeave();
+
+  const f = e.dataTransfer && e.dataTransfer.files[0];
+  if (f) autoRoute(f);
+}
+
+function handleGlobalFileInput(e) {
+  const f = e.target.files[0];
+  if (f) autoRoute(f);
+}
+
+function autoRoute(file) {
+  const n = file.name.toLowerCase();
+  const t = file.type.toLowerCase();
+
+  if (n.endsWith('.svg') || t === 'image/svg+xml') {
+    switchTab('svg');
+    loadSvgFile(file);
+  }
+  else if (n.endsWith('.pdf') || t === 'application/pdf') {
+    switchTab('pdf');
+    loadPdfFile(file);
+  }
+  else if (t.startsWith('image/') || /\.(png|jpe?g|webp)$/.test(n)) {
+    switchTab('image');
+    loadImageFiles([file]);
+  }
+  else if (/\.(html?|css|js|mjs|ts)$/.test(n)) {
+    switchTab('code');
+    loadCodeFile(file);
+  }
+  else if (t.startsWith('video/') || /\.(mp4|webm|mov|avi|mkv)$/.test(n)) {
+    showToast('Video compression has been removed from this version.', 'info', 5000);
+  }
+  else {
+    showToast('File type not recognized.', 'error');
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CODE MODULE
+═══════════════════════════════════════════════════════════════ */
+function handleCodeDrop(e) {
+  e.preventDefault();
+  document.getElementById('code-dropzone').classList.remove('drag-over');
+
+  const f = e.dataTransfer.files[0];
+  if (f) loadCodeFile(f);
+}
+
+function handleCodeFile(e) {
+  loadCodeFile(e.target.files[0]);
+}
+
+function loadCodeFile(file) {
+  if (!file || !checkLimit(file, 'code')) return;
+
+  codeFileName = file.name.replace(/(\.[^.]+)$/, '.min$1');
+
+  const r = new FileReader();
+
+  r.onload = ev => {
+    document.getElementById('code-input').value = ev.target.result;
+    document.getElementById('code-file-name').textContent = file.name;
+    document.getElementById('code-file-size').textContent = fmtSize(file.size);
+
+    showEl('code-file-badge');
+
+    const n = file.name.toLowerCase();
+    const sel = document.getElementById('code-type');
+
+    if (/\.html?$/.test(n)) sel.value = 'html';
+    else if (n.endsWith('.css')) sel.value = 'css';
+    else if (/\.(js|mjs|ts)$/.test(n)) sel.value = 'js';
+  };
+
+  r.readAsText(file);
+}
+
+function detectCodeType(input) {
+  const sel = document.getElementById('code-type').value;
+  if (sel !== 'auto') return sel;
+
+  const t = input.trim();
+
+  if (t.startsWith('<') || /<html|<!DOCTYPE/i.test(t)) return 'html';
+  if (/[a-z-]+\s*:\s*[^;{]+;/.test(t) && !t.includes('function') && !t.includes('=>')) return 'css';
+
+  return 'js';
+}
+
+async function minifyCode() {
+  const input = document.getElementById('code-input').value.trim();
+
+  if (!input) {
+    showToast('Please paste or upload code first.', 'error');
+    return;
+  }
+
+  const level = document.getElementById('code-level').value;
+  const type = detectCodeType(input);
+
+  showWorkerSpinner();
+
+  try {
+    const result = await runInWorker(type, input, level);
+
+    document.getElementById('code-output').value = result;
+
+    const ob = new Blob([input]).size;
+    const rb = new Blob([result]).size;
+
+    document.getElementById('code-stat-original').textContent = fmtSize(ob);
+    document.getElementById('code-stat-minified').textContent = fmtSize(rb);
+    document.getElementById('code-stat-saved').textContent = fmtPct(ob, rb);
+
+    showEl('code-stats');
+    showEl('code-output-wrap');
+
+    showToast('Code minified!', 'success');
+  }
+  catch(e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+  finally {
+    hideWorkerSpinner();
+  }
+}
+
+function clearCode() {
+  document.getElementById('code-input').value = '';
+  document.getElementById('code-output').value = '';
+  document.getElementById('code-file-input').value = '';
+
+  hideEl('code-stats');
+  hideEl('code-output-wrap');
+  hideEl('code-file-badge');
+}
+
+function copyCode() {
+  navigator.clipboard.writeText(document.getElementById('code-output').value)
+    .then(() => showToast('Copied!', 'success'))
+    .catch(() => showToast('Copy failed.', 'error'));
+}
+
+function downloadCode() {
+  const c = document.getElementById('code-output').value;
+  if (c) triggerDownload(new Blob([c], { type: 'text/plain' }), codeFileName);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SVG MODULE
+═══════════════════════════════════════════════════════════════ */
+function handleSvgDrop(e) {
+  e.preventDefault();
+  document.getElementById('svg-dropzone').classList.remove('drag-over');
+
+  const f = e.dataTransfer.files[0];
+  if (f) loadSvgFile(f);
+}
+
+function handleSvgFile(e) {
+  loadSvgFile(e.target.files[0]);
+}
+
+function loadSvgFile(file) {
+  if (!file || !checkLimit(file, 'svg')) return;
+
+  svgFileName = file.name.replace('.svg', '.min.svg');
+
+  const r = new FileReader();
+
+  r.onload = ev => {
+    document.getElementById('svg-input').value = ev.target.result;
+    document.getElementById('svg-file-name').textContent = file.name;
+    document.getElementById('svg-file-size').textContent = fmtSize(file.size);
+
+    showEl('svg-file-badge');
+  };
+
+  r.readAsText(file);
+}
+
+async function cleanSvg() {
+  const input = document.getElementById('svg-input').value.trim();
+
+  if (!input) {
+    showToast('Please paste or upload an SVG first.', 'error');
+    return;
+  }
+
+  showWorkerSpinner();
+
+  try {
+    const r = await runInWorker('svg', input, null);
+
+    document.getElementById('svg-output').value = r;
+
+    const ob = new Blob([input]).size;
+    const rb = new Blob([r]).size;
+
+    document.getElementById('svg-stat-original').textContent = fmtSize(ob);
+    document.getElementById('svg-stat-cleaned').textContent = fmtSize(rb);
+    document.getElementById('svg-stat-saved').textContent = fmtPct(ob, rb);
+
+    showEl('svg-stats');
+    showEl('svg-output-wrap');
+
+    showToast('SVG cleaned!', 'success');
+  }
+  catch(e) {
+    showToast('SVG error: ' + e.message, 'error');
+  }
+  finally {
+    hideWorkerSpinner();
+  }
+}
+
+function clearSvg() {
+  document.getElementById('svg-input').value = '';
+  document.getElementById('svg-output').value = '';
+  document.getElementById('svg-file-input').value = '';
+
+  hideEl('svg-stats');
+  hideEl('svg-output-wrap');
+  hideEl('svg-file-badge');
+}
+
+function copySvg() {
+  navigator.clipboard.writeText(document.getElementById('svg-output').value)
+    .then(() => showToast('Copied!', 'success'))
+    .catch(() => showToast('Copy failed.', 'error'));
+}
+
+function downloadSvg() {
+  const c = document.getElementById('svg-output').value;
+  if (c) triggerDownload(new Blob([c], { type: 'image/svg+xml' }), svgFileName);
+}
+/* ═══════════════════════════════════════════════════════════════
+   PDF MODULE
+═══════════════════════════════════════════════════════════════ */
+function selectPdfLevel(level) {
+  pdfLevel = level;
+
+  document.querySelectorAll('.pdf-level-btn').forEach(btn => {
+    btn.classList.remove('selected');
+  });
+
+  document.getElementById('pdf-level-' + level).classList.add('selected');
+}
+
+function handlePdfDrop(e) {
+  e.preventDefault();
+  document.getElementById('pdf-dropzone').classList.remove('drag-over');
+
+  const f = e.dataTransfer.files[0];
+  if (f) loadPdfFile(f);
+}
+
+function handlePdfFile(e) {
+  loadPdfFile(e.target.files[0]);
+}
+
+function loadPdfFile(file) {
+  if (!file || !checkLimit(file, 'pdf')) return;
+
+  if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+    showToast('Please select a valid PDF.', 'error');
+    return;
+  }
+
+  const r = new FileReader();
+
+  r.onload = ev => {
+    pdfFileData = {
+      file,
+      bytes: new Uint8Array(ev.target.result)
+    };
+
+    document.getElementById('pdf-file-name').textContent = file.name;
+    document.getElementById('pdf-file-size').textContent = fmtSize(file.size);
+
+    showEl('pdf-file-badge');
+
+    document.getElementById('pdf-compress-btn').disabled = false;
+
+    hideEl('pdf-stats');
+    hideEl('pdf-download-wrap');
+    hideEl('pdf-progress-wrap');
+
+    pdfOutputBytes = null;
+  };
+
+  r.readAsArrayBuffer(file);
+}
+
+async function compressPdf() {
+  if (!pdfFileData) {
+    showToast('Please upload a PDF first.', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('pdf-compress-btn');
+
+  btn.disabled = true;
+  btn.innerHTML = '<svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg><span>Processing...</span>';
+
+  setProgress('pdf-progress-bar', 'pdf-progress-wrap', 10);
+
+  try {
+    const { PDFDocument } = PDFLib;
+
+    setProgress('pdf-progress-bar', 'pdf-progress-wrap', 25);
+
+    const pdfDoc = await PDFDocument.load(pdfFileData.bytes, {
+      ignoreEncryption: true
+    });
+
+    setProgress('pdf-progress-bar', 'pdf-progress-wrap', 45);
+
+    pdfDoc.setTitle('');
+    pdfDoc.setAuthor('');
+    pdfDoc.setSubject('');
+    pdfDoc.setKeywords([]);
+    pdfDoc.setProducer('');
+    pdfDoc.setCreator('');
+
+    let saveOptions = {
+      addDefaultPage: false
+    };
+
+    if (pdfLevel === 'medium' || pdfLevel === 'high' || pdfLevel === 'max') {
+      saveOptions.useObjectStreams = true;
+    }
+
+    setProgress('pdf-progress-bar', 'pdf-progress-wrap', 60);
+
+    if (pdfLevel === 'high' || pdfLevel === 'max') {
+      for (const page of pdfDoc.getPages()) {
+        try {
+          page.node.delete(page.node.context.obj('Thumb'));
+        }
+        catch(_) {}
+      }
+    }
+
+    if (pdfLevel === 'max') {
+      for (const page of pdfDoc.getPages()) {
+        try {
+          page.node.delete(page.node.context.obj('Metadata'));
+          page.node.delete(page.node.context.obj('PieceInfo'));
+          page.node.delete(page.node.context.obj('LastModified'));
+        }
+        catch(_) {}
+      }
+
+      try {
+        const cat = pdfDoc.catalog;
+
+        ['Metadata','PieceInfo','OCProperties','OpenAction','AA'].forEach(k => {
+          try {
+            cat.delete(cat.context.obj(k));
+          }
+          catch(_) {}
+        });
+      }
+      catch(_) {}
+    }
+
+    setProgress('pdf-progress-bar', 'pdf-progress-wrap', 80);
+
+    const savedBytes = await pdfDoc.save(saveOptions);
+
+    setProgress('pdf-progress-bar', 'pdf-progress-wrap', 100);
+
+    pdfOutputBytes = savedBytes;
+
+    const ob = pdfFileData.bytes.length;
+    const rb = savedBytes.length;
+
+    document.getElementById('pdf-stat-original').textContent = fmtSize(ob);
+    document.getElementById('pdf-stat-compressed').textContent = fmtSize(rb);
+    document.getElementById('pdf-stat-saved').textContent = fmtPct(ob, rb);
+    document.getElementById('pdf-stat-pages').textContent = pdfDoc.getPageCount();
+
+    showEl('pdf-stats');
+    showEl('pdf-download-wrap');
+
+    showToast('PDF compressed!', 'success');
+  }
+  catch(e) {
+    showToast('PDF error: ' + e.message, 'error');
+    hideEl('pdf-progress-wrap');
+  }
+  finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg><span data-i18n="compressBtn">Compress</span>';
+    updateUI();
+  }
+}
+
+function clearPdf() {
+  pdfFileData = null;
+  pdfOutputBytes = null;
+
+  document.getElementById('pdf-file-input').value = '';
+  document.getElementById('pdf-compress-btn').disabled = true;
+
+  hideEl('pdf-file-badge');
+  hideEl('pdf-stats');
+  hideEl('pdf-download-wrap');
+  hideEl('pdf-progress-wrap');
+}
+
+function downloadPdf() {
+  if (!pdfOutputBytes) return;
+
+  const name = (pdfFileData?.file?.name || 'file').replace(/\.pdf$/i, '') + '_compressed.pdf';
+
+  triggerDownload(
+    new Blob([pdfOutputBytes], { type: 'application/pdf' }),
+    name
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   IMAGE MODULE
+═══════════════════════════════════════════════════════════════ */
+function selectImagePreset(btn, limitMB) {
+  document.querySelectorAll('#image-preset-grid .preset-btn').forEach(b => {
+    b.classList.remove('selected');
+  });
+
+  btn.classList.add('selected');
+
+  imagePresetLimit = limitMB;
+
+  document.getElementById('image-manual-box').classList.toggle('visible', limitMB === -1);
+}
+
+function handleImageDrop(e) {
+  e.preventDefault();
+  document.getElementById('image-dropzone').classList.remove('drag-over');
+
+  loadImageFiles(Array.from(e.dataTransfer.files));
+}
+
+function handleImageFiles(e) {
+  loadImageFiles(Array.from(e.target.files));
+}
+
+function loadImageFiles(files) {
+  const valid = files.filter(f => {
+    return f.type.startsWith('image/') && checkLimit(f, 'image');
+  });
+
+  if (!valid.length) return;
+
+  imageFiles = valid.map(f => ({
+    file: f,
+    result: null
+  }));
+
+  document.getElementById('image-compress-btn').disabled = false;
+
+  hideEl('image-stats');
+  hideEl('image-download-wrap');
+  hideEl('image-grid');
+
+  showToast(valid.length + ' image(s) loaded.', 'info');
+}
+
+async function compressImages() {
+  if (!imageFiles.length) {
+    showToast('Please upload images first.', 'error');
+    return;
+  }
+
+  const format = document.getElementById('image-format').value;
+  const quality = parseFloat(document.getElementById('image-quality').value);
+
+  let targetMB = imagePresetLimit;
+
+  if (targetMB === -1) {
+    targetMB = parseFloat(document.getElementById('image-manual-mb').value) || 0;
+  }
+
+  const btn = document.getElementById('image-compress-btn');
+
+  btn.disabled = true;
+
+  showEl('image-progress-wrap');
+
+  let totalOrig = 0;
+  let totalComp = 0;
+
+  const grid = document.getElementById('image-grid');
+
+  grid.innerHTML = '';
+  showEl('image-grid');
+
+  for (let i = 0; i < imageFiles.length; i++) {
+    const item = imageFiles[i];
+
+    setProgress(
+      'image-progress-bar',
+      'image-progress-wrap',
+      Math.round((i / imageFiles.length) * 90)
+    );
+
+    try {
+      const blob = await compressSingleImage(
+        item.file,
+        format,
+        quality,
+        targetMB
+      );
+
+      item.result = blob;
+
+      totalOrig += item.file.size;
+      totalComp += blob.size;
+
+      const url = URL.createObjectURL(blob);
+
+      const card = document.createElement('div');
+      card.className = 'image-card';
+
+      card.innerHTML =
+        '<img class="image-card-thumb" src="' + url + '" alt="' + item.file.name + '" loading="lazy"/>' +
+        '<div class="image-card-info">' +
+          '<div class="image-card-name">' + item.file.name + '</div>' +
+          '<div class="image-card-size">' + fmtSize(item.file.size) + ' → <span class="saved">' + fmtSize(blob.size) + '</span></div>' +
+        '</div>';
+
+      grid.appendChild(card);
+    }
+    catch(e) {
+      showToast('Failed: ' + item.file.name, 'error');
+    }
+  }
+
+  setProgress('image-progress-bar', 'image-progress-wrap', 100);
+
+  document.getElementById('image-stat-files').textContent = imageFiles.length;
+  document.getElementById('image-stat-original').textContent = fmtSize(totalOrig);
+  document.getElementById('image-stat-compressed').textContent = fmtSize(totalComp);
+  document.getElementById('image-stat-saved').textContent = fmtPct(totalOrig, totalComp);
+
+  showEl('image-stats');
+
+  if (imageFiles.length === 1) {
+    showEl('image-download-single');
+    hideEl('image-download-zip');
+  }
+  else {
+    hideEl('image-download-single');
+    showEl('image-download-zip');
+  }
+
+  showEl('image-download-wrap');
+
+  btn.disabled = false;
+
+  showToast(imageFiles.length + ' image(s) compressed!', 'success');
+}
+
+function compressSingleImage(file, format, quality, targetMB) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+
+      const outFmt = format === 'original'
+        ? (
+            file.type === 'image/png'
+              ? 'image/png'
+              : file.type === 'image/webp'
+                ? 'image/webp'
+                : 'image/jpeg'
+          )
+        : ('image/' + format);
+
+      const targetBytes = targetMB > 0 ? targetMB * 1048576 : 0;
+
+      const origW = img.naturalWidth;
+      const origH = img.naturalHeight;
+
+      function tryCompress(w, h, q) {
+        const canvas = document.createElement('canvas');
+
+        canvas.width = w;
+        canvas.height = h;
+
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+
+        canvas.toBlob(blob => {
+          if (!blob) {
+            reject(new Error('toBlob failed'));
+            return;
+          }
+
+          if (targetBytes === 0 || blob.size <= targetBytes) {
+            resolve(blob);
+            return;
+          }
+
+          if (q > 0.1) {
+            tryCompress(w, h, Math.max(0.1, q - 0.08));
+            return;
+          }
+
+          const nW = Math.floor(w * 0.85);
+          const nH = Math.floor(h * 0.85);
+
+          if (nW < 64 || nH < 64) {
+            resolve(blob);
+            return;
+          }
+
+          tryCompress(nW, nH, quality);
+        }, outFmt, q);
+      }
+
+      tryCompress(origW, origH, quality);
+    };
+
+    img.onerror = () => reject(new Error('Image load failed'));
+    img.src = url;
+  });
+}
+
+function clearImages() {
+  imageFiles = [];
+
+  document.getElementById('image-file-input').value = '';
+  document.getElementById('image-compress-btn').disabled = true;
+
+  hideEl('image-stats');
+  hideEl('image-download-wrap');
+  hideEl('image-progress-wrap');
+
+  const g = document.getElementById('image-grid');
+
+  g.innerHTML = '';
+  hideEl('image-grid');
+}
+
+function downloadSingleImage() {
+  const item = imageFiles.find(i => i.result);
+
+  if (!item) return;
+
+  const ext = item.result.type.split('/')[1] || 'jpg';
+
+  triggerDownload(
+    item.result,
+    item.file.name.replace(/\.[^.]+$/, '') + '_compressed.' + ext
+  );
+}
+
+async function downloadImagesZip() {
+  const ready = imageFiles.filter(i => i.result);
+
+  if (!ready.length) return;
+
+  showToast('Creating ZIP...', 'info');
+
+  const zip = new JSZip();
+
+  for (const item of ready) {
+    const ext = item.result.type.split('/')[1] || 'jpg';
+
+    zip.file(
+      item.file.name.replace(/\.[^.]+$/, '') + '_compressed.' + ext,
+      item.result
+    );
+  }
+
+  const blob = await zip.generateAsync({
+    type: 'blob',
+    compression: 'DEFLATE',
+    compressionOptions: {
+      level: 6
+    }
+  });
+
+  triggerDownload(blob, 'pratix_compressed_images.zip');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded', () => {
+  /* Dil */
+  const lang = localStorage.getItem('pratix-lang') || navigator.language?.slice(0, 2) || 'en';
+  const validLang = DICT[lang] ? lang : 'en';
+
+  currentLang = validLang;
+
+  const langSel = document.getElementById('lang-select');
+  if (langSel) langSel.value = validLang;
+
+  /* Tema */
+  const saved = localStorage.getItem('pratix-theme');
+  const isDark = saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme:dark)').matches);
+
+  document.documentElement.classList.toggle('dark', isDark);
+
+  const ti = document.getElementById('theme-toggle-input');
+  if (ti) ti.checked = isDark;
+
+  /* i18n */
+  setLang(validLang);
+
+  /* PDF varsayılan seviye */
+  selectPdfLevel('medium');
+});
+</script>
+</body>
+</html>
